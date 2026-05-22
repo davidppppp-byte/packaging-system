@@ -1,0 +1,1488 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>包裝部人均產值系統</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+    <style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0
+    }
+
+    :root {
+        --bg: #f7f7f5;
+        --surface: #ffffff;
+        --surface2: #f2f2ef;
+        --border: #e2e2de;
+        --text: #1a1a18;
+        --text2: #6b6b65;
+        --text3: #9b9b95;
+        --green: #1D9E75;
+        --green-bg: #E1F5EE;
+        --green-text: #0F6E56;
+        --red: #D85A30;
+        --red-bg: #FAECE7;
+        --red-text: #993C1D;
+        --blue: #378ADD;
+        --blue-bg: #E6F1FB;
+        --blue-text: #185FA5;
+        --amber: #BA7517;
+        --amber-bg: #FAEEDA;
+        --amber-text: #854F0B;
+        --radius: 8px;
+        --radius-lg: 12px;
+    }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Noto Sans TC', sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        font-size: 15px;
+        min-height: 100vh
+    }
+
+    .nav {
+        display: flex;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        position: sticky;
+        top: 0;
+        z-index: 100
+    }
+
+    .nav-item {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+        padding: 10px 4px;
+        cursor: pointer;
+        font-size: 11px;
+        color: var(--text3);
+        border-bottom: 2px solid transparent;
+        transition: all 0.15s
+    }
+
+    .nav-item i {
+        font-size: 20px
+    }
+
+    .nav-item.active {
+        color: var(--green);
+        border-bottom-color: var(--green)
+    }
+
+    .page {
+        display: none;
+        padding: 16px;
+        max-width: 600px;
+        margin: 0 auto;
+        padding-bottom: 40px
+    }
+
+    .page.active {
+        display: block
+    }
+
+    .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 16px;
+        margin-bottom: 12px
+    }
+
+    .card-title {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text2);
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 6px
+    }
+
+    .form-group {
+        margin-bottom: 12px
+    }
+
+    .form-label {
+        font-size: 12px;
+        color: var(--text2);
+        margin-bottom: 4px;
+        display: block
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        font-size: 15px;
+        background: var(--surface);
+        color: var(--text);
+        outline: none;
+        transition: border 0.15s
+    }
+
+    .form-control:focus {
+        border-color: var(--green)
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px
+    }
+
+    .btn {
+        padding: 10px 16px;
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--text);
+        font-size: 14px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.15s
+    }
+
+    .btn:hover {
+        background: var(--surface2)
+    }
+
+    .btn-primary {
+        background: var(--green);
+        color: #fff;
+        border-color: var(--green)
+    }
+
+    .btn-primary:hover {
+        background: #179065
+    }
+
+    .btn-full {
+        width: 100%;
+        justify-content: center;
+        padding: 13px
+    }
+
+    .btn-sm {
+        padding: 5px 10px;
+        font-size: 12px
+    }
+
+    .btn-danger {
+        color: var(--red-text);
+        border-color: var(--red-bg);
+        background: var(--red-bg)
+    }
+
+    .btn-danger:hover {
+        background: #f5c4b3
+    }
+
+    .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-bottom: 12px
+    }
+
+    .metric {
+        background: var(--surface2);
+        border-radius: var(--radius);
+        padding: 12px
+    }
+
+    .metric-label {
+        font-size: 11px;
+        color: var(--text3);
+        margin-bottom: 2px
+    }
+
+    .metric-value {
+        font-size: 22px;
+        font-weight: 500
+    }
+
+    .metric-unit {
+        font-size: 11px;
+        color: var(--text3)
+    }
+
+    .rank-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--border)
+    }
+
+    .rank-item:last-child {
+        border-bottom: none
+    }
+
+    .rank-num {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text3);
+        width: 18px;
+        text-align: center
+    }
+
+    .rank-info {
+        flex: 1
+    }
+
+    .rank-name {
+        font-size: 13px;
+        margin-bottom: 3px;
+        display: flex;
+        align-items: center;
+        gap: 6px
+    }
+
+    .rank-bar-bg {
+        height: 5px;
+        background: var(--surface2);
+        border-radius: 3px;
+        overflow: hidden
+    }
+
+    .rank-bar {
+        height: 5px;
+        border-radius: 3px;
+        transition: width 0.5s ease
+    }
+
+    .rank-val {
+        font-size: 13px;
+        font-weight: 500;
+        min-width: 60px;
+        text-align: right
+    }
+
+    .badge {
+        font-size: 11px;
+        padding: 2px 7px;
+        border-radius: 10px;
+        font-weight: 500
+    }
+
+    .badge-green {
+        background: var(--green-bg);
+        color: var(--green-text)
+    }
+
+    .badge-red {
+        background: var(--red-bg);
+        color: var(--red-text)
+    }
+
+    .alert {
+        border-radius: var(--radius);
+        padding: 10px 14px;
+        margin-bottom: 12px;
+        font-size: 13px;
+        display: flex;
+        align-items: flex-start;
+        gap: 8px
+    }
+
+    .alert i {
+        font-size: 16px;
+        margin-top: 1px;
+        flex-shrink: 0
+    }
+
+    .alert-warn {
+        background: var(--red-bg);
+        color: var(--red-text)
+    }
+
+    .alert-info {
+        background: var(--blue-bg);
+        color: var(--blue-text)
+    }
+
+    .tbl-wrap {
+        overflow-x: auto
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px
+    }
+
+    th {
+        text-align: left;
+        padding: 8px;
+        color: var(--text2);
+        font-weight: 500;
+        border-bottom: 1px solid var(--border);
+        white-space: nowrap
+    }
+
+    td {
+        padding: 9px 8px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: middle
+    }
+
+    tr:last-child td {
+        border-bottom: none
+    }
+
+    .admin-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px
+    }
+
+    .admin-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 12px;
+        background: var(--surface2);
+        border-radius: var(--radius);
+        border: 1px solid var(--border)
+    }
+
+    .admin-add-row {
+        display: flex;
+        gap: 8px;
+        margin-top: 8px
+    }
+
+    .admin-add-row input {
+        flex: 1
+    }
+
+    .toast {
+        position: fixed;
+        bottom: 80px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #1a1a18;
+        color: #fff;
+        padding: 10px 20px;
+        border-radius: 20px;
+        font-size: 14px;
+        z-index: 999;
+        opacity: 0;
+        transition: opacity 0.2s;
+        pointer-events: none;
+        white-space: nowrap
+    }
+
+    .toast.show {
+        opacity: 1
+    }
+
+    .chart-wrap {
+        position: relative;
+        width: 100%
+    }
+
+    .date-pills {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 12px;
+        flex-wrap: wrap
+    }
+
+    .pill {
+        padding: 5px 12px;
+        border-radius: 16px;
+        font-size: 12px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        cursor: pointer;
+        color: var(--text2)
+    }
+
+    .pill.active {
+        background: var(--green);
+        color: #fff;
+        border-color: var(--green)
+    }
+
+    .loading-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(247, 247, 245, 0.85);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 200;
+        gap: 12px
+    }
+
+    .loading-overlay.hide {
+        display: none
+    }
+
+    .spinner {
+        width: 32px;
+        height: 32px;
+        border: 3px solid var(--border);
+        border-top-color: var(--green);
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg)
+        }
+    }
+
+    .sync-bar {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: var(--text3);
+        padding: 4px 12px;
+        background: var(--surface2);
+        border-radius: 20px;
+        position: fixed;
+        top: 56px;
+        right: 10px;
+        z-index: 99;
+        border: 1px solid var(--border)
+    }
+
+    .sync-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--green)
+    }
+
+    .sync-dot.syncing {
+        background: var(--amber);
+        animation: pulse 1s ease-in-out infinite
+    }
+
+    .sync-dot.error {
+        background: var(--red)
+    }
+
+    @keyframes pulse {
+        0%, 100% {
+            opacity:1
+        }
+
+        50% {
+            opacity: 0.3
+        }
+    }
+    </style>
+</head>
+<body>
+
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="spinner"></div>
+        <div style="font-size:14px;color:var(--text2)">載入資料中...</div>
+    </div>
+
+    <div class="sync-bar" id="sync-bar">
+        <div class="sync-dot" id="sync-dot"></div>
+        <span id="sync-label">已同步</span>
+    </div>
+
+    <div class="nav">
+        <div class="nav-item active" onclick="goPage('record')">
+            <i class="ti ti-clipboard-plus"></i>
+            <span>記錄</span>
+        </div>
+        <div class="nav-item" onclick="goPage('dashboard')">
+            <i class="ti ti-chart-bar"></i>
+            <span>儀表板</span>
+        </div>
+        <div class="nav-item" onclick="goPage('trend')">
+            <i class="ti ti-trending-up"></i>
+            <span>趨勢</span>
+        </div>
+        <div class="nav-item" onclick="goPage('admin')">
+            <i class="ti ti-settings"></i>
+            <span>設定</span>
+        </div>
+    </div>
+
+    <!-- 記錄頁 -->
+    <div id="page-record" class="page active">
+        <div class="card">
+            <div class="card-title">
+                <i class="ti ti-clipboard-plus"></i>
+                 新增產值記錄
+            </div>
+            <div class="form-group">
+                <label class="form-label">機台</label>
+                <select class="form-control" id="f-machine"></select>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">組長</label>
+                    <select class="form-control" id="f-leader"></select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">人員數量</label>
+                    <input type="number" class="form-control" id="f-workers" placeholder="例：5" min="1">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">產品品項</label>
+                <select class="form-control" id="f-product"></select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">總產量（件）</label>
+                <input type="number" class="form-control" id="f-output" placeholder="例：1200" min="1">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">開始時間</label>
+                    <input type="datetime-local" class="form-control" id="f-start">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">結束時間</label>
+                    <input type="datetime-local" class="form-control" id="f-end">
+                </div>
+            </div>
+            <div id="preview-box" style="background:var(--green-bg);border-radius:var(--radius);padding:10px 14px;margin-bottom:12px;display:none">
+                <div style="font-size:12px;color:var(--green-text);margin-bottom:2px">預估結果</div>
+                <div style="display:flex;gap:16px;flex-wrap:wrap">
+                    <span style="font-size:13px;color:var(--green-text)">
+                        工時：
+                        <strong id="prev-hours">-</strong>
+                         小時
+                    </span>
+                    <span style="font-size:13px;color:var(--green-text)">
+                        人均產值：
+                        <strong id="prev-pp">-</strong>
+                         件/人
+                    </span>
+                    <span style="font-size:13px;color:var(--green-text)">
+                        每人時產：
+                        <strong id="prev-pph">-</strong>
+                         件/人時
+                    </span>
+                </div>
+            </div>
+            <button class="btn btn-primary btn-full" id="submit-btn" onclick="submitRecord()">
+                <i class="ti ti-device-floppy"></i>
+                 儲存記錄
+            </button>
+        </div>
+        <div class="card">
+            <div class="card-title">
+                <i class="ti ti-history"></i>
+                 最近記錄
+            </div>
+            <div class="tbl-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>機台</th>
+                            <th>組長</th>
+                            <th>人數</th>
+                            <th>產品</th>
+                            <th>人均</th>
+                            <th>工時</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recent-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 儀表板 -->
+    <div id="page-dashboard" class="page">
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+            <select class="form-control" style="flex:1;min-width:90px" id="fil-leader" onchange="updateDash()">
+                <option value="">所有組長</option>
+            </select>
+            <select class="form-control" style="flex:1;min-width:90px" id="fil-machine" onchange="updateDash()">
+                <option value="">所有機台</option>
+            </select>
+            <select class="form-control" style="flex:1;min-width:90px" id="fil-product" onchange="updateDash()">
+                <option value="">所有品項</option>
+            </select>
+        </div>
+        <div class="metrics-grid">
+            <div class="metric">
+                <div class="metric-label">平均人均產值</div>
+                <div class="metric-value" id="m-avg">-</div>
+                <div class="metric-unit">件/人</div>
+            </div>
+            <div class="metric">
+                <div class="metric-label">總記錄筆數</div>
+                <div class="metric-value" id="m-count">-</div>
+                <div class="metric-unit">筆</div>
+            </div>
+            <div class="metric">
+                <div class="metric-label">平均每人時產</div>
+                <div class="metric-value" id="m-pph">-</div>
+                <div class="metric-unit">件/人時</div>
+            </div>
+        </div>
+        <div id="dash-alerts"></div>
+        <div class="card">
+            <div class="card-title">
+                <i class="ti ti-medal"></i>
+                 機台排行（人均產值）
+            </div>
+            <div id="rank-list"></div>
+        </div>
+        <div class="card">
+            <div class="card-title">
+                <i class="ti ti-users"></i>
+                 組長績效比較
+            </div>
+            <div class="chart-wrap" style="height:200px">
+                <canvas id="leaderChart">
+                </canvas>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-title">
+                <i class="ti ti-list-details"></i>
+                 記錄明細
+            </div>
+            <div class="tbl-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>日期</th>
+                            <th>機台</th>
+                            <th>組長</th>
+                            <th>產品</th>
+                            <th>人均</th>
+                            <th>人時產</th>
+                        </tr>
+                    </thead>
+                    <tbody id="detail-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 趨勢 -->
+    <div id="page-trend" class="page">
+        <div class="date-pills">
+            <div class="pill active" onclick="setRange(this,7)">近7天</div>
+            <div class="pill" onclick="setRange(this,14)">近14天</div>
+            <div class="pill" onclick="setRange(this,30)">近30天</div>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+            <select class="form-control" id="trend-fil-leader" onchange="updateTrend()">
+                <option value="">所有組長</option>
+            </select>
+            <select class="form-control" id="trend-fil-machine" onchange="updateTrend()">
+                <option value="">所有機台</option>
+            </select>
+        </div>
+        <div class="card">
+            <div class="card-title">
+                <i class="ti ti-trending-up"></i>
+                 人均產值趨勢
+            </div>
+            <div class="chart-wrap" style="height:220px">
+                <canvas id="trendChart">
+                </canvas>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-title">
+                <i class="ti ti-clock-hour4"></i>
+                 每人時產趨勢
+            </div>
+            <div class="chart-wrap" style="height:200px">
+                <canvas id="pphChart">
+                </canvas>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-title">
+                <i class="ti ti-users"></i>
+                 各組長每日人均
+            </div>
+            <div id="trend-legend" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;font-size:12px"></div>
+            <div class="chart-wrap" style="height:220px">
+                <canvas id="leaderTrendChart">
+                </canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- 設定 -->
+    <div id="page-admin" class="page">
+        <div class="card">
+            <div class="card-title">
+                <i class="ti ti-cpu"></i>
+                 機台管理
+            </div>
+            <div class="admin-list" id="admin-machines"></div>
+            <div class="admin-add-row">
+                <input type="text" class="form-control" id="new-machine" placeholder="新增機台名稱">
+                <button class="btn btn-primary" onclick="addItem('machine')">
+                    <i class="ti ti-plus"></i>
+                </button>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-title">
+                <i class="ti ti-user-check"></i>
+                 組長管理
+            </div>
+            <div class="admin-list" id="admin-leaders"></div>
+            <div class="admin-add-row">
+                <input type="text" class="form-control" id="new-leader" placeholder="新增組長姓名">
+                <button class="btn btn-primary" onclick="addItem('leader')">
+                    <i class="ti ti-plus"></i>
+                </button>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-title">
+                <i class="ti ti-package"></i>
+                 產品品項管理
+            </div>
+            <div class="admin-list" id="admin-products"></div>
+            <div class="admin-add-row">
+                <input type="text" class="form-control" id="new-product" placeholder="新增品項名稱">
+                <button class="btn btn-primary" onclick="addItem('product')">
+                    <i class="ti ti-plus"></i>
+                </button>
+            </div>
+        </div>
+        <div class="card" style="border-color:#f0997b">
+            <div class="card-title" style="color:var(--red-text)">
+                <i class="ti ti-trash"></i>
+                 危險操作
+            </div>
+            <p style="font-size:13px;color:var(--text2);margin-bottom:10px">清除所有產值記錄，設定資料不受影響。</p>
+            <button class="btn btn-danger" onclick="clearRecords()">
+                <i class="ti ti-trash"></i>
+                 清除所有記錄
+            </button>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+    // ===== SUPABASE CONFIG =====
+    const SB_URL = 'https://hqtlkdhtdwgrusvmqymm.supabase.co';
+    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxdGxrZGh0ZHdncnVzdm1xeW1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MzQ3MzYsImV4cCI6MjA5NTAxMDczNn0.ilYO3-l2r2HHv0FTSCGdnzH7-nOBZOEcuR-fKj2Lw_0';
+
+    const sbFetch = (path, opts={}) => fetch(SB_URL + '/rest/v1/' + path, {
+        headers: {
+            'apikey': SB_KEY,
+            'Authorization': 'Bearer ' + SB_KEY,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation',
+            ...(opts.headers || {})
+        },
+        ...opts
+    });
+
+    // ===== STATE =====
+    let state = {
+        machines: [],
+        leaders: [],
+        products: [],
+        records: []
+    };
+
+    // ===== SYNC UI =====
+    function setSyncing() {
+        const d = document.getElementById('sync-dot');
+        d.className = 'sync-dot syncing';
+        document.getElementById('sync-label').textContent = '同步中...';
+    }
+    function setSynced() {
+        const d = document.getElementById('sync-dot');
+        d.className = 'sync-dot';
+        document.getElementById('sync-label').textContent = '已同步';
+    }
+    function setSyncError() {
+        const d = document.getElementById('sync-dot');
+        d.className = 'sync-dot error';
+        document.getElementById('sync-label').textContent = '連線錯誤';
+    }
+
+    // ===== API =====
+    async function loadSettings() {
+        const r = await sbFetch('settings?select=key,value');
+        if (!r.ok)
+            throw new Error('載入設定失敗');
+        const rows = await r.json();
+        rows.forEach(row => {
+            const k = row.key; // machines / leaders / products
+            state[k] = row.value;
+        });
+    }
+
+    async function saveSettings(key) {
+        setSyncing();
+        try {
+            const r = await sbFetch('settings?key=eq.' + key, {
+                method: 'PATCH',
+                body: JSON.stringify({
+                    value: state[key]
+                })
+            });
+            if (!r.ok)
+                throw new Error();
+            setSynced();
+        } catch (e) {
+            setSyncError();
+            toast('⚠ 設定儲存失敗，請檢查網路');
+        }
+    }
+
+    async function loadRecords() {
+        const r = await sbFetch('records?select=*&order=start_time.desc&limit=200');
+        if (!r.ok)
+            throw new Error('載入記錄失敗');
+        const rows = await r.json();
+        state.records = rows.map(normalizeRecord);
+    }
+
+    function normalizeRecord(r) {
+        return {
+            id: r.id,
+            machine: r.machine,
+            leader: r.leader,
+            workers: r.workers,
+            output: r.output,
+            product: r.product,
+            start: r.start_time ? r.start_time.slice(0, 16) : '',
+            end: r.end_time ? r.end_time.slice(0, 16) : '',
+            date: r.date || (r.start_time ? r.start_time.slice(0, 10) : '')
+        };
+    }
+
+    async function insertRecord(rec) {
+        setSyncing();
+        const r = await sbFetch('records', {
+            method: 'POST',
+            body: JSON.stringify({
+                machine: rec.machine,
+                leader: rec.leader,
+                workers: rec.workers,
+                output: rec.output,
+                product: rec.product,
+                start_time: rec.start,
+                end_time: rec.end,
+                date: rec.date
+            })
+        });
+        if (!r.ok) {
+            setSyncError();
+            throw new Error('儲存失敗');
+        }
+        const rows = await r.json();
+        setSynced();
+        return normalizeRecord(rows[0]);
+    }
+
+    async function deleteAllRecords() {
+        setSyncing();
+        const r = await sbFetch('records?id=gt.0', {
+            method: 'DELETE'
+        });
+        if (!r.ok) {
+            setSyncError();
+            throw new Error('刪除失敗');
+        }
+        setSynced();
+    }
+
+    // ===== UTIL =====
+    function calcHours(start, end) {
+        if (!start || !end)
+            return 0;
+        const diff = (new Date(end) - new Date(start)) / 3600000;
+        return diff > 0 ? diff : 0;
+    }
+    function calcPP(r) {
+        return r.workers > 0 ? Math.round(r.output / r.workers) : 0;
+    }
+    function calcPPH(r) {
+        const h = calcHours(r.start, r.end);
+        if (!h || !r.workers)
+            return 0;
+        return Math.round(r.output / (r.workers * h) * 10) / 10;
+    }
+    function fmtDate(dt) {
+        return dt ? dt.split('T')[0] : '';
+    }
+    function toast(msg, dur=2400) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), dur);
+    }
+
+    // ===== SELECTS =====
+    function populateSelects() {
+        const sets = [
+        ['f-machine', 'fil-machine', state.machines, '— 選擇機台 —', '所有機台'],
+        ['f-leader', 'fil-leader', state.leaders, '— 選擇組長 —', '所有組長'],
+        ['f-product', 'fil-product', state.products, '— 選擇品項 —', '所有品項'],
+        ['trend-fil-leader', null, state.leaders, '所有組長', null],
+        ['trend-fil-machine', null, state.machines, '所有機台', null],
+        ];
+        sets.forEach(([id1, id2, arr, ph1, ph2]) => {
+            [id1, id2].forEach((id, i) => {
+                if (!id)
+                    return;
+                const el = document.getElementById(id);
+                if (!el)
+                    return;
+                const cur = el.value;
+                el.innerHTML = '<option value="">' + (i === 0 ? ph1 : ph2) + '</option>' + arr.map(v => `<option value="${v}">${v}</option>`).join('');
+                if (arr.includes(cur))
+                    el.value = cur;
+            });
+        });
+    }
+
+    // ===== RECORD PAGE =====
+    function initDefaultTimes() {
+        const now = new Date();
+        const pad = n => String(n).padStart(2, '0');
+        const fmt = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        const start = new Date(now);
+        start.setHours(8, 0, 0, 0);
+        document.getElementById('f-start').value = fmt(start);
+        document.getElementById('f-end').value = fmt(now);
+    }
+
+    function updatePreview() {
+        const workers = parseInt(document.getElementById('f-workers').value) || 0;
+        const output = parseInt(document.getElementById('f-output').value) || 0;
+        const start = document.getElementById('f-start').value;
+        const end = document.getElementById('f-end').value;
+        const box = document.getElementById('preview-box');
+        if (workers > 0 && output > 0 && start && end) {
+            const h = calcHours(start, end);
+            if (h > 0) {
+                document.getElementById('prev-hours').textContent = Math.round(h * 10) / 10;
+                document.getElementById('prev-pp').textContent = Math.round(output / workers);
+                document.getElementById('prev-pph').textContent = Math.round(output / (workers * h) * 10) / 10;
+                box.style.display = 'block';
+                return;
+            }
+        }
+        box.style.display = 'none';
+    }
+
+    ['f-workers', 'f-output', 'f-start', 'f-end'].forEach(id => {
+        document.getElementById(id).addEventListener('input', updatePreview);
+        document.getElementById(id).addEventListener('change', updatePreview);
+    });
+
+    async function submitRecord() {
+        const machine = document.getElementById('f-machine').value;
+        const leader = document.getElementById('f-leader').value;
+        const workers = parseInt(document.getElementById('f-workers').value);
+        const output = parseInt(document.getElementById('f-output').value);
+        const product = document.getElementById('f-product').value;
+        const start = document.getElementById('f-start').value;
+        const end = document.getElementById('f-end').value;
+        if (!machine || !leader || !workers || !output || !product || !start || !end) {
+            toast('⚠ 請填寫所有欄位');
+            return;
+        }
+        if (new Date(end) <= new Date(start)) {
+            toast('⚠ 結束時間需晚於開始時間');
+            return;
+        }
+
+        const btn = document.getElementById('submit-btn');
+        btn.disabled = true;
+        btn.textContent = '儲存中...';
+        try {
+            const rec = await insertRecord({
+                machine,
+                leader,
+                workers,
+                output,
+                product,
+                start,
+                end,
+                date: fmtDate(start)
+            });
+            state.records.unshift(rec);
+            renderRecentTable();
+            document.getElementById('f-workers').value = '';
+            document.getElementById('f-output').value = '';
+            document.getElementById('preview-box').style.display = 'none';
+            toast('✓ 已儲存！人均產值 ' + calcPP(rec) + ' 件/人');
+        } catch (e) {
+            toast('⚠ 儲存失敗：' + e.message);
+        }
+        btn.disabled = false;
+        btn.innerHTML = '<i class="ti ti-device-floppy"></i> 儲存記錄';
+    }
+
+    function renderRecentTable() {
+        const tbody = document.getElementById('recent-tbody');
+        const recent = state.records.slice(0, 8);
+        if (!recent.length) {
+            tbody.innerHTML = '<tr><td colspan="6" style="color:var(--text3);text-align:center;padding:16px">尚無記錄</td></tr>';
+            return;
+        }
+        tbody.innerHTML = recent.map(r => {
+            const h = Math.round(calcHours(r.start, r.end) * 10) / 10;
+            return `<tr><td>${r.machine}</td><td>${r.leader}</td><td>${r.workers}人</td><td style="color:var(--text2)">${r.product}</td><td style="font-weight:500">${calcPP(r)}</td><td style="color:var(--text2)">${h}h</td></tr>`;
+        }).join('');
+    }
+
+    // ===== DASHBOARD =====
+    let lChart = null;
+    function destroyChart(c) {
+        if (c) {
+            c.destroy();
+        }
+        return null;
+    }
+
+    function getFiltered() {
+        const fl = document.getElementById('fil-leader').value;
+        const fm = document.getElementById('fil-machine').value;
+        const fp = document.getElementById('fil-product').value;
+        return state.records.filter(r => (!fl || r.leader === fl) && (!fm || r.machine === fm) && (!fp || r.product === fp));
+    }
+
+    function updateDash() {
+        const recs = getFiltered();
+        if (!recs.length) {
+            ['m-avg', 'm-count', 'm-pph'].forEach(id => document.getElementById(id).textContent = '-');
+            document.getElementById('rank-list').innerHTML = '<p style="color:var(--text3);font-size:13px;text-align:center;padding:16px">無資料</p>';
+            document.getElementById('detail-tbody').innerHTML = '';
+            document.getElementById('dash-alerts').innerHTML = '';
+            return;
+        }
+        const avgPP = Math.round(recs.reduce((a, r) => a + calcPP(r), 0) / recs.length);
+        const avgPPH = Math.round(recs.reduce((a, r) => a + calcPPH(r), 0) / recs.length * 10) / 10;
+        document.getElementById('m-avg').textContent = avgPP;
+        document.getElementById('m-count').textContent = recs.length;
+        document.getElementById('m-pph').textContent = avgPPH;
+
+        const byM = {};
+        recs.forEach(r => {
+            if (!byM[r.machine])
+                byM[r.machine] = [];
+            byM[r.machine].push(r);
+        });
+        const mArr = Object.entries(byM).map(([k, v]) => ({
+            name: k,
+            val: Math.round(v.reduce((a, r) => a + calcPP(r), 0) / v.length),
+            pph: Math.round(v.reduce((a, r) => a + calcPPH(r), 0) / v.length * 10) / 10
+        })).sort((a, b) => b.val - a.val);
+        const maxV = mArr[0]?.val || 1;
+        const minT = avgPP * 0.85;
+
+        const lowMs = mArr.filter(m => m.val < minT);
+        document.getElementById('dash-alerts').innerHTML = lowMs.length
+        ? `<div class="alert alert-warn"><i class="ti ti-alert-triangle"></i><div><strong>效率偏低提醒</strong><br>${lowMs.map(m => m.name + '（' + m.val + ' 件/人）').join('、')} 低於平均 85%</div></div>` : '';
+
+        document.getElementById('rank-list').innerHTML = mArr.map((m, i) => {
+            const low = m.val < minT;
+            const pct = Math.round(m.val / maxV * 100);
+            return `<div class="rank-item"><div class="rank-num">${i + 1}</div><div class="rank-info"><div class="rank-name">${m.name}<span class="badge ${low ? 'badge-red' : 'badge-green'}">${low ? '偏低' : '正常'}</span></div><div class="rank-bar-bg"><div class="rank-bar" style="width:${pct}%;background:${low ? 'var(--red)' : 'var(--green)'}"></div></div></div><div class="rank-val">${m.val} <span style="font-size:10px;color:var(--text3)">件/人</span></div></div>`;
+        }).join('');
+
+        const byL = {};
+        recs.forEach(r => {
+            if (!byL[r.leader])
+                byL[r.leader] = [];
+            byL[r.leader].push(calcPP(r));
+        });
+        const lNames = Object.keys(byL);
+        const lVals = lNames.map(l => Math.round(byL[l].reduce((a, b) => a + b, 0) / byL[l].length));
+        const lColors = ['#1D9E75', '#378ADD', '#D85A30', '#BA7517', '#7F77DD'];
+        lChart = destroyChart(lChart);
+        lChart = new Chart(document.getElementById('leaderChart'), {
+            type: 'bar',
+            data: {
+                labels: lNames,
+                datasets: [{
+                    label: '人均產值',
+                    data: lVals,
+                    backgroundColor: lNames.map((_, i) => lColors[i % lColors.length]),
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            font: {
+                                size: 11
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(128,128,128,0.1)'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            font: {
+                                size: 12
+                            }
+                        },
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+
+        document.getElementById('detail-tbody').innerHTML = recs.slice(0, 20).map(r => {
+            const pp = calcPP(r);
+            const low = pp < minT;
+            return `<tr><td style="color:var(--text2)">${r.date}</td><td>${r.machine}</td><td>${r.leader}</td><td style="color:var(--text2)">${r.product}</td><td style="font-weight:500;color:${low ? 'var(--red-text)' : 'inherit'}">${pp}</td><td style="color:var(--text2)">${calcPPH(r)}</td></tr>`;
+        }).join('');
+    }
+
+    // ===== TREND =====
+    let trendRange = 7,
+        tChart = null,
+        pphC = null,
+        ltChart = null;
+    function setRange(el, r) {
+        document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+        el.classList.add('active');
+        trendRange = r;
+        updateTrend();
+    }
+
+    function getDateRange(days) {
+        const dates = [];
+        const now = new Date();
+        for (let i = days - 1; i >= 0; i--) {
+            const d = new Date(now);
+            d.setDate(d.getDate() - i);
+            dates.push(d.toISOString().split('T')[0]);
+        }
+        return dates;
+    }
+
+    function updateTrend() {
+        const fl = document.getElementById('trend-fil-leader').value;
+        const fm = document.getElementById('trend-fil-machine').value;
+        const dates = getDateRange(trendRange);
+        const recs = state.records.filter(r => (!fl || r.leader === fl) && (!fm || r.machine === fm) && dates.includes(r.date));
+
+        const byDate = {};
+        dates.forEach(d => byDate[d] = []);
+        recs.forEach(r => {
+            if (byDate[r.date])
+                byDate[r.date].push(r);
+        });
+        const ppVals = dates.map(d => {
+            const a = byDate[d];
+            return a.length ? Math.round(a.reduce((s, r) => s + calcPP(r), 0) / a.length) : null;
+        });
+        const pphVals = dates.map(d => {
+            const a = byDate[d];
+            return a.length ? Math.round(a.reduce((s, r) => s + calcPPH(r), 0) / a.length * 10) / 10 : null;
+        });
+        const lbls = dates.map(d => d.slice(5));
+
+        tChart = destroyChart(tChart);
+        tChart = new Chart(document.getElementById('trendChart'), {
+            type: 'line',
+            data: {
+                labels: lbls,
+                datasets: [{
+                    label: '人均產值',
+                    data: ppVals,
+                    borderColor: '#1D9E75',
+                    backgroundColor: 'rgba(29,158,117,0.08)',
+                    tension: 0.3,
+                    fill: true,
+                    pointRadius: 3,
+                    spanGaps: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        ticks: {
+                            font: {
+                                size: 11
+                            }
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            font: {
+                                size: 11
+                            }
+                        },
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+
+        pphC = destroyChart(pphC);
+        pphC = new Chart(document.getElementById('pphChart'), {
+            type: 'line',
+            data: {
+                labels: lbls,
+                datasets: [{
+                    label: '每人時產',
+                    data: pphVals,
+                    borderColor: '#378ADD',
+                    backgroundColor: 'rgba(55,138,221,0.08)',
+                    tension: 0.3,
+                    fill: true,
+                    pointRadius: 3,
+                    spanGaps: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        ticks: {
+                            font: {
+                                size: 11
+                            }
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            font: {
+                                size: 11
+                            }
+                        },
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+
+        const leaderColors = ['#1D9E75', '#378ADD', '#D85A30', '#BA7517', '#7F77DD'];
+        const leaders = [...new Set(recs.map(r => r.leader))];
+        const datasets = leaders.map((l, i) => ({
+            label: l,
+            borderColor: leaderColors[i % leaderColors.length],
+            backgroundColor: 'transparent',
+            tension: 0.3,
+            pointRadius: 3,
+            spanGaps: true,
+            data: dates.map(d => {
+                const a = recs.filter(r => r.date === d && r.leader === l);
+                return a.length ? Math.round(a.reduce((s, r) => s + calcPP(r), 0) / a.length) : null;
+            })
+        }));
+        document.getElementById('trend-legend').innerHTML = leaders.map((l, i) => `<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:${leaderColors[i % leaderColors.length]}"></span>${l}</span>`).join('');
+        ltChart = destroyChart(ltChart);
+        ltChart = new Chart(document.getElementById('leaderTrendChart'), {
+            type: 'line',
+            data: {
+                labels: lbls,
+                datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        ticks: {
+                            font: {
+                                size: 11
+                            }
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            font: {
+                                size: 11
+                            }
+                        },
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // ===== ADMIN =====
+    function renderAdminLists() {
+        renderAdminList('machines', 'machine');
+        renderAdminList('leaders', 'leader');
+        renderAdminList('products', 'product');
+    }
+
+    function renderAdminList(key, type) {
+        const el = document.getElementById('admin-' + key);
+        const arr = state[key];
+        el.innerHTML = arr.map((v, i) => `<div class="admin-item"><span class="admin-item-name">${v}</span><button class="btn btn-danger btn-sm" data-type="${type}" data-idx="${i}"><i class="ti ti-trash"></i></button></div>`).join('') || `<p style="color:var(--text3);font-size:13px">尚無項目</p>`;
+        el.querySelectorAll('button[data-type]').forEach(btn => {
+            btn.addEventListener('click', () => removeItem(btn.dataset.type, parseInt(btn.dataset.idx)));
+        });
+    }
+
+    async function addItem(type) {
+        const keyMap = {
+            machine: 'machines',
+            leader: 'leaders',
+            product: 'products'
+        };
+        const key = keyMap[type];
+        const inp = document.getElementById('new-' + type);
+        const val = inp.value.trim();
+        if (!val) {
+            toast('⚠ 請輸入名稱');
+            return;
+        }
+        if (state[key].includes(val)) {
+            toast('⚠ 已存在');
+            return;
+        }
+        state[key].push(val);
+        await saveSettings(key);
+        inp.value = '';
+        renderAdminLists();
+        populateSelects();
+        toast('✓ 已新增：' + val);
+    }
+
+    async function removeItem(type, idx) {
+        const keyMap = {
+            machine: 'machines',
+            leader: 'leaders',
+            product: 'products'
+        };
+        const key = keyMap[type];
+        const name = state[key][idx];
+        if (!confirm('確定刪除「' + name + '」？'))
+            return;
+        state[key].splice(idx, 1);
+        await saveSettings(key);
+        renderAdminLists();
+        populateSelects();
+        toast('已刪除：' + name);
+    }
+
+    async function clearRecords() {
+        if (!confirm('確定清除所有 ' + state.records.length + ' 筆記錄？此動作無法復原。'))
+            return;
+        try {
+            await deleteAllRecords();
+            state.records = [];
+            renderRecentTable();
+            toast('已清除所有記錄');
+        } catch (e) {
+            toast('⚠ 清除失敗：' + e.message);
+        }
+    }
+
+    // ===== NAV =====
+    function goPage(id) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById('page-' + id).classList.add('active');
+        const idx = {
+            record: 0,
+            dashboard: 1,
+            trend: 2,
+            admin: 3
+        }[id];
+        document.querySelectorAll('.nav-item')[idx].classList.add('active');
+        if (id === 'dashboard')
+            updateDash();
+        if (id === 'trend')
+            updateTrend();
+        if (id === 'admin')
+            renderAdminLists();
+    }
+
+    // ===== INIT =====
+    async function init() {
+        try {
+            await loadSettings();
+            await loadRecords();
+            populateSelects();
+            initDefaultTimes();
+            renderRecentTable();
+            setSynced();
+        } catch (e) {
+            setSyncError();
+            toast('⚠ 連線失敗，請確認網路後重新整理');
+            console.error(e);
+        }
+        document.getElementById('loading-overlay').classList.add('hide');
+    }
+
+    ['new-machine', 'new-leader', 'new-product'].forEach((id, i) => {
+        document.getElementById(id).addEventListener('keydown', e => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addItem(['machine', 'leader', 'product'][i]);
+            }
+        });
+    });
+
+    init();
+    </script>
+</body>
+</html>
