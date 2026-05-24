@@ -134,6 +134,11 @@
         border-color: var(--green)
     }
 
+    .form-control:disabled {
+        background: var(--surface2);
+        color: var(--text3)
+    }
+
     .form-row {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -247,7 +252,8 @@
         margin-bottom: 3px;
         display: flex;
         align-items: center;
-        gap: 6px
+        gap: 6px;
+        flex-wrap: wrap
     }
 
     .rank-bar-bg {
@@ -287,6 +293,16 @@
         color: var(--red-text)
     }
 
+    .badge-blue {
+        background: var(--blue-bg);
+        color: var(--blue-text)
+    }
+
+    .badge-amber {
+        background: var(--amber-bg);
+        color: var(--amber-text)
+    }
+
     .alert {
         border-radius: var(--radius);
         padding: 10px 14px;
@@ -306,11 +322,6 @@
     .alert-warn {
         background: var(--red-bg);
         color: var(--red-text)
-    }
-
-    .alert-info {
-        background: var(--blue-bg);
-        color: var(--blue-text)
     }
 
     .tbl-wrap {
@@ -358,6 +369,21 @@
         border: 1px solid var(--border)
     }
 
+    .admin-sub {
+        padding: 6px 12px 6px 24px;
+        background: var(--surface);
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between
+    }
+
+    .admin-sub-name {
+        font-size: 13px;
+        color: var(--text2)
+    }
+
     .admin-add-row {
         display: flex;
         gap: 8px;
@@ -366,6 +392,36 @@
 
     .admin-add-row input {
         flex: 1
+    }
+
+    .cat-section {
+        margin-bottom: 16px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        overflow: hidden
+    }
+
+    .cat-header {
+        background: var(--surface2);
+        padding: 10px 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        cursor: pointer
+    }
+
+    .cat-header-name {
+        font-size: 14px;
+        font-weight: 500
+    }
+
+    .cat-body {
+        padding: 12px 14px;
+        display: none
+    }
+
+    .cat-body.open {
+        display: block
     }
 
     .toast {
@@ -489,6 +545,18 @@
             opacity: 0.3
         }
     }
+
+    .filter-bar {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+        flex-wrap: wrap
+    }
+
+    .filter-bar select {
+        flex: 1;
+        min-width: 80px
+    }
     </style>
 </head>
 <body>
@@ -522,7 +590,7 @@
         </div>
     </div>
 
-    <!-- 記錄頁 -->
+    <!-- ===== 記錄頁 ===== -->
     <div id="page-record" class="page active">
         <div class="card">
             <div class="card-title">
@@ -543,9 +611,23 @@
                     <input type="number" class="form-control" id="f-workers" placeholder="例：5" min="1">
                 </div>
             </div>
-            <div class="form-group">
-                <label class="form-label">產品品項</label>
-                <select class="form-control" id="f-product"></select>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">類別</label>
+                    <select class="form-control" id="f-category" onchange="onCategoryChange()">
+                        <option value="">— 選擇類別 —</option>
+                        <option>獨享包</option>
+                        <option>鐵盒</option>
+                        <option>單片</option>
+                        <option>漢餅</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">口味</label>
+                    <select class="form-control" id="f-flavor" disabled>
+                        <option value="">— 先選類別 —</option>
+                    </select>
+                </div>
             </div>
             <div class="form-group">
                 <label class="form-label">總產量（件）</label>
@@ -567,15 +649,15 @@
                     <span style="font-size:13px;color:var(--green-text)">
                         工時：
                         <strong id="prev-hours">-</strong>
-                         小時
+                         h
                     </span>
                     <span style="font-size:13px;color:var(--green-text)">
-                        人均產值：
+                        人均：
                         <strong id="prev-pp">-</strong>
                          件/人
                     </span>
                     <span style="font-size:13px;color:var(--green-text)">
-                        每人時產：
+                        人時產：
                         <strong id="prev-pph">-</strong>
                          件/人時
                     </span>
@@ -597,8 +679,8 @@
                         <tr>
                             <th>機台</th>
                             <th>組長</th>
-                            <th>人數</th>
-                            <th>產品</th>
+                            <th>類別</th>
+                            <th>口味</th>
                             <th>人均</th>
                             <th>工時</th>
                         </tr>
@@ -609,19 +691,24 @@
         </div>
     </div>
 
-    <!-- 儀表板 -->
+    <!-- ===== 儀表板 ===== -->
     <div id="page-dashboard" class="page">
-        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-            <select class="form-control" style="flex:1;min-width:90px" id="fil-leader" onchange="updateDash()">
+        <div class="filter-bar">
+            <select class="form-control" id="fil-category" onchange="updateDash()">
+                <option value="">所有類別</option>
+                <option>獨享包</option>
+                <option>鐵盒</option>
+                <option>單片</option>
+                <option>漢餅</option>
+            </select>
+            <select class="form-control" id="fil-leader" onchange="updateDash()">
                 <option value="">所有組長</option>
             </select>
-            <select class="form-control" style="flex:1;min-width:90px" id="fil-machine" onchange="updateDash()">
+            <select class="form-control" id="fil-machine" onchange="updateDash()">
                 <option value="">所有機台</option>
             </select>
-            <select class="form-control" style="flex:1;min-width:90px" id="fil-product" onchange="updateDash()">
-                <option value="">所有品項</option>
-            </select>
         </div>
+
         <div class="metrics-grid">
             <div class="metric">
                 <div class="metric-label">平均人均產值</div>
@@ -639,7 +726,12 @@
                 <div class="metric-unit">件/人時</div>
             </div>
         </div>
+
         <div id="dash-alerts"></div>
+
+        <!-- 各類別指標卡 -->
+        <div id="cat-metrics-section"></div>
+
         <div class="card">
             <div class="card-title">
                 <i class="ti ti-medal"></i>
@@ -669,7 +761,8 @@
                             <th>日期</th>
                             <th>機台</th>
                             <th>組長</th>
-                            <th>產品</th>
+                            <th>類別</th>
+                            <th>口味</th>
                             <th>人均</th>
                             <th>人時產</th>
                         </tr>
@@ -680,14 +773,21 @@
         </div>
     </div>
 
-    <!-- 趨勢 -->
+    <!-- ===== 趨勢 ===== -->
     <div id="page-trend" class="page">
         <div class="date-pills">
             <div class="pill active" onclick="setRange(this,7)">近7天</div>
             <div class="pill" onclick="setRange(this,14)">近14天</div>
             <div class="pill" onclick="setRange(this,30)">近30天</div>
         </div>
-        <div style="display:flex;gap:8px;margin-bottom:12px">
+        <div class="filter-bar">
+            <select class="form-control" id="trend-fil-category" onchange="updateTrend()">
+                <option value="">所有類別</option>
+                <option>獨享包</option>
+                <option>鐵盒</option>
+                <option>單片</option>
+                <option>漢餅</option>
+            </select>
             <select class="form-control" id="trend-fil-leader" onchange="updateTrend()">
                 <option value="">所有組長</option>
             </select>
@@ -728,7 +828,7 @@
         </div>
     </div>
 
-    <!-- 設定 -->
+    <!-- ===== 設定 ===== -->
     <div id="page-admin" class="page">
         <div class="card">
             <div class="card-title">
@@ -758,16 +858,11 @@
         </div>
         <div class="card">
             <div class="card-title">
-                <i class="ti ti-package"></i>
-                 產品品項管理
+                <i class="ti ti-ice-cream"></i>
+                 各類別口味管理
             </div>
-            <div class="admin-list" id="admin-products"></div>
-            <div class="admin-add-row">
-                <input type="text" class="form-control" id="new-product" placeholder="新增品項名稱">
-                <button class="btn btn-primary" onclick="addItem('product')">
-                    <i class="ti ti-plus"></i>
-                </button>
-            </div>
+            <p style="font-size:12px;color:var(--text3);margin-bottom:12px">點開各類別後可新增或刪除口味</p>
+            <div id="admin-flavors"></div>
         </div>
         <div class="card" style="border-color:#f0997b">
             <div class="card-title" style="color:var(--red-text)">
@@ -785,9 +880,21 @@
     <div class="toast" id="toast"></div>
 
     <script>
-    // ===== SUPABASE CONFIG =====
     const SB_URL = 'https://hqtlkdhtdwgrusvmqymm.supabase.co';
     const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxdGxrZGh0ZHdncnVzdm1xeW1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MzQ3MzYsImV4cCI6MjA5NTAxMDczNn0.ilYO3-l2r2HHv0FTSCGdnzH7-nOBZOEcuR-fKj2Lw_0';
+    const CATEGORIES = ['獨享包', '鐵盒', '單片', '漢餅'];
+    const CAT_COLORS = {
+        '獨享包': '#1D9E75',
+        '鐵盒': '#378ADD',
+        '單片': '#D85A30',
+        '漢餅': '#BA7517'
+    };
+    const CAT_BADGE = {
+        '獨享包': 'badge-green',
+        '鐵盒': 'badge-blue',
+        '單片': 'badge-red',
+        '漢餅': 'badge-amber'
+    };
 
     const sbFetch = (path, opts={}) => fetch(SB_URL + '/rest/v1/' + path, {
         headers: {
@@ -800,40 +907,48 @@
         ...opts
     });
 
-    // ===== STATE =====
     let state = {
         machines: [],
         leaders: [],
-        products: [],
+        flavors: {
+            獨享包: [],
+            鐵盒: [],
+            單片: [],
+            漢餅: []
+        },
         records: []
     };
 
-    // ===== SYNC UI =====
+    // SYNC UI
     function setSyncing() {
-        const d = document.getElementById('sync-dot');
-        d.className = 'sync-dot syncing';
+        document.getElementById('sync-dot').className = 'sync-dot syncing';
         document.getElementById('sync-label').textContent = '同步中...';
     }
     function setSynced() {
-        const d = document.getElementById('sync-dot');
-        d.className = 'sync-dot';
+        document.getElementById('sync-dot').className = 'sync-dot';
         document.getElementById('sync-label').textContent = '已同步';
     }
     function setSyncError() {
-        const d = document.getElementById('sync-dot');
-        d.className = 'sync-dot error';
+        document.getElementById('sync-dot').className = 'sync-dot error';
         document.getElementById('sync-label').textContent = '連線錯誤';
     }
 
-    // ===== API =====
+    // API
     async function loadSettings() {
         const r = await sbFetch('settings?select=key,value');
         if (!r.ok)
             throw new Error('載入設定失敗');
         const rows = await r.json();
         rows.forEach(row => {
-            const k = row.key; // machines / leaders / products
-            state[k] = row.value;
+            if (row.key === 'machines')
+                state.machines = row.value;
+            else if (row.key === 'leaders')
+                state.leaders = row.value;
+            else if (row.key === 'flavors')
+                state.flavors = {
+                    ...state.flavors,
+                    ...row.value
+                };
         });
     }
 
@@ -851,12 +966,12 @@
             setSynced();
         } catch (e) {
             setSyncError();
-            toast('⚠ 設定儲存失敗，請檢查網路');
+            toast('⚠ 儲存失敗，請檢查網路');
         }
     }
 
     async function loadRecords() {
-        const r = await sbFetch('records?select=*&order=start_time.desc&limit=200');
+        const r = await sbFetch('records?select=*&order=start_time.desc&limit=300');
         if (!r.ok)
             throw new Error('載入記錄失敗');
         const rows = await r.json();
@@ -870,7 +985,8 @@
             leader: r.leader,
             workers: r.workers,
             output: r.output,
-            product: r.product,
+            category: r.category || '',
+            flavor: r.flavor || r.product || '',
             start: r.start_time ? r.start_time.slice(0, 16) : '',
             end: r.end_time ? r.end_time.slice(0, 16) : '',
             date: r.date || (r.start_time ? r.start_time.slice(0, 10) : '')
@@ -886,7 +1002,9 @@
                 leader: rec.leader,
                 workers: rec.workers,
                 output: rec.output,
-                product: rec.product,
+                product: rec.flavor,
+                category: rec.category,
+                flavor: rec.flavor,
                 start_time: rec.start,
                 end_time: rec.end,
                 date: rec.date
@@ -908,17 +1026,17 @@
         });
         if (!r.ok) {
             setSyncError();
-            throw new Error('刪除失敗');
+            throw new Error();
         }
         setSynced();
     }
 
-    // ===== UTIL =====
-    function calcHours(start, end) {
-        if (!start || !end)
+    // UTIL
+    function calcHours(s, e) {
+        if (!s || !e)
             return 0;
-        const diff = (new Date(end) - new Date(start)) / 3600000;
-        return diff > 0 ? diff : 0;
+        const d = (new Date(e) - new Date(s)) / 3600000;
+        return d > 0 ? d : 0;
     }
     function calcPP(r) {
         return r.workers > 0 ? Math.round(r.output / r.workers) : 0;
@@ -939,60 +1057,67 @@
         setTimeout(() => t.classList.remove('show'), dur);
     }
 
-    // ===== SELECTS =====
+    // POPULATE SELECTS (machines, leaders only — category/flavor handled separately)
     function populateSelects() {
-        const sets = [
-        ['f-machine', 'fil-machine', state.machines, '— 選擇機台 —', '所有機台'],
-        ['f-leader', 'fil-leader', state.leaders, '— 選擇組長 —', '所有組長'],
-        ['f-product', 'fil-product', state.products, '— 選擇品項 —', '所有品項'],
-        ['trend-fil-leader', null, state.leaders, '所有組長', null],
-        ['trend-fil-machine', null, state.machines, '所有機台', null],
-        ];
-        sets.forEach(([id1, id2, arr, ph1, ph2]) => {
-            [id1, id2].forEach((id, i) => {
-                if (!id)
-                    return;
+        [['f-machine', 'fil-machine', 'trend-fil-machine'], ['f-leader', 'fil-leader', 'trend-fil-leader']].forEach(([fId, dId, tId], ki) => {
+            const arr = ki === 0 ? state.machines : state.leaders;
+            const ph = ki === 0 ? '— 選擇機台 —' : '— 選擇組長 —';
+            const allPh = ki === 0 ? '所有機台' : '所有組長';
+            [[fId, ph], [dId, allPh], [tId, allPh]].forEach(([id, p]) => {
                 const el = document.getElementById(id);
                 if (!el)
                     return;
                 const cur = el.value;
-                el.innerHTML = '<option value="">' + (i === 0 ? ph1 : ph2) + '</option>' + arr.map(v => `<option value="${v}">${v}</option>`).join('');
+                el.innerHTML = `<option value="">${p}</option>` + arr.map(v => `<option value="${v}">${v}</option>`).join('');
                 if (arr.includes(cur))
                     el.value = cur;
             });
         });
     }
 
-    // ===== RECORD PAGE =====
+    // CATEGORY → FLAVOR cascade
+    function onCategoryChange() {
+        const cat = document.getElementById('f-category').value;
+        const flavorSel = document.getElementById('f-flavor');
+        if (!cat) {
+            flavorSel.innerHTML = '<option value="">— 先選類別 —</option>';
+            flavorSel.disabled = true;
+            return;
+        }
+        const flavors = state.flavors[cat] || [];
+        flavorSel.innerHTML = '<option value="">— 選擇口味 —</option>' + flavors.map(f => `<option value="${f}">${f}</option>`).join('');
+        flavorSel.disabled = false;
+    }
+
+    // RECORD PAGE
     function initDefaultTimes() {
         const now = new Date();
         const pad = n => String(n).padStart(2, '0');
         const fmt = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-        const start = new Date(now);
-        start.setHours(8, 0, 0, 0);
-        document.getElementById('f-start').value = fmt(start);
+        const s = new Date(now);
+        s.setHours(8, 0, 0, 0);
+        document.getElementById('f-start').value = fmt(s);
         document.getElementById('f-end').value = fmt(now);
     }
 
     function updatePreview() {
-        const workers = parseInt(document.getElementById('f-workers').value) || 0;
-        const output = parseInt(document.getElementById('f-output').value) || 0;
-        const start = document.getElementById('f-start').value;
-        const end = document.getElementById('f-end').value;
+        const w = parseInt(document.getElementById('f-workers').value) || 0;
+        const o = parseInt(document.getElementById('f-output').value) || 0;
+        const s = document.getElementById('f-start').value;
+        const e = document.getElementById('f-end').value;
         const box = document.getElementById('preview-box');
-        if (workers > 0 && output > 0 && start && end) {
-            const h = calcHours(start, end);
+        if (w > 0 && o > 0 && s && e) {
+            const h = calcHours(s, e);
             if (h > 0) {
                 document.getElementById('prev-hours').textContent = Math.round(h * 10) / 10;
-                document.getElementById('prev-pp').textContent = Math.round(output / workers);
-                document.getElementById('prev-pph').textContent = Math.round(output / (workers * h) * 10) / 10;
+                document.getElementById('prev-pp').textContent = Math.round(o / w);
+                document.getElementById('prev-pph').textContent = Math.round(o / (w * h) * 10) / 10;
                 box.style.display = 'block';
                 return;
             }
         }
         box.style.display = 'none';
     }
-
     ['f-workers', 'f-output', 'f-start', 'f-end'].forEach(id => {
         document.getElementById(id).addEventListener('input', updatePreview);
         document.getElementById(id).addEventListener('change', updatePreview);
@@ -1003,10 +1128,11 @@
         const leader = document.getElementById('f-leader').value;
         const workers = parseInt(document.getElementById('f-workers').value);
         const output = parseInt(document.getElementById('f-output').value);
-        const product = document.getElementById('f-product').value;
+        const category = document.getElementById('f-category').value;
+        const flavor = document.getElementById('f-flavor').value;
         const start = document.getElementById('f-start').value;
         const end = document.getElementById('f-end').value;
-        if (!machine || !leader || !workers || !output || !product || !start || !end) {
+        if (!machine || !leader || !workers || !output || !category || !flavor || !start || !end) {
             toast('⚠ 請填寫所有欄位');
             return;
         }
@@ -1014,7 +1140,6 @@
             toast('⚠ 結束時間需晚於開始時間');
             return;
         }
-
         const btn = document.getElementById('submit-btn');
         btn.disabled = true;
         btn.textContent = '儲存中...';
@@ -1024,7 +1149,8 @@
                 leader,
                 workers,
                 output,
-                product,
+                category,
+                flavor,
                 start,
                 end,
                 date: fmtDate(start)
@@ -1033,6 +1159,8 @@
             renderRecentTable();
             document.getElementById('f-workers').value = '';
             document.getElementById('f-output').value = '';
+            document.getElementById('f-category').value = '';
+            onCategoryChange();
             document.getElementById('preview-box').style.display = 'none';
             toast('✓ 已儲存！人均產值 ' + calcPP(rec) + ' 件/人');
         } catch (e) {
@@ -1051,41 +1179,66 @@
         }
         tbody.innerHTML = recent.map(r => {
             const h = Math.round(calcHours(r.start, r.end) * 10) / 10;
-            return `<tr><td>${r.machine}</td><td>${r.leader}</td><td>${r.workers}人</td><td style="color:var(--text2)">${r.product}</td><td style="font-weight:500">${calcPP(r)}</td><td style="color:var(--text2)">${h}h</td></tr>`;
+            const bc = CAT_BADGE[r.category] || 'badge-blue';
+            return `<tr><td>${r.machine}</td><td>${r.leader}</td><td><span class="badge ${bc}">${r.category}</span></td><td style="color:var(--text2)">${r.flavor}</td><td style="font-weight:500">${calcPP(r)}</td><td style="color:var(--text2)">${h}h</td></tr>`;
         }).join('');
     }
 
-    // ===== DASHBOARD =====
+    // DASHBOARD
     let lChart = null;
     function destroyChart(c) {
-        if (c) {
+        if (c)
             c.destroy();
-        }
         return null;
     }
 
-    function getFiltered() {
-        const fl = document.getElementById('fil-leader').value;
-        const fm = document.getElementById('fil-machine').value;
-        const fp = document.getElementById('fil-product').value;
-        return state.records.filter(r => (!fl || r.leader === fl) && (!fm || r.machine === fm) && (!fp || r.product === fp));
+    function getFiltered(catId, leadId, machId) {
+        const fc = document.getElementById(catId).value;
+        const fl = document.getElementById(leadId).value;
+        const fm = document.getElementById(machId).value;
+        return state.records.filter(r => (!fc || r.category === fc) && (!fl || r.leader === fl) && (!fm || r.machine === fm));
     }
 
     function updateDash() {
-        const recs = getFiltered();
+        const recs = getFiltered('fil-category', 'fil-leader', 'fil-machine');
         if (!recs.length) {
             ['m-avg', 'm-count', 'm-pph'].forEach(id => document.getElementById(id).textContent = '-');
             document.getElementById('rank-list').innerHTML = '<p style="color:var(--text3);font-size:13px;text-align:center;padding:16px">無資料</p>';
             document.getElementById('detail-tbody').innerHTML = '';
             document.getElementById('dash-alerts').innerHTML = '';
+            document.getElementById('cat-metrics-section').innerHTML = '';
             return;
         }
+
         const avgPP = Math.round(recs.reduce((a, r) => a + calcPP(r), 0) / recs.length);
-        const avgPPH = Math.round(recs.reduce((a, r) => a + calcPPH(r), 0) / recs.length * 10) / 10;
         document.getElementById('m-avg').textContent = avgPP;
         document.getElementById('m-count').textContent = recs.length;
-        document.getElementById('m-pph').textContent = avgPPH;
+        document.getElementById('m-pph').textContent = Math.round(recs.reduce((a, r) => a + calcPPH(r), 0) / recs.length * 10) / 10;
 
+        // 各類別指標卡（只在「所有類別」時顯示）
+        const catFilter = document.getElementById('fil-category').value;
+        const catSection = document.getElementById('cat-metrics-section');
+        if (!catFilter) {
+            const catCards = CATEGORIES.map(cat => {
+                const cr = recs.filter(r => r.category === cat);
+                if (!cr.length)
+                    return '';
+                const pp = Math.round(cr.reduce((a, r) => a + calcPP(r), 0) / cr.length);
+                const pph = Math.round(cr.reduce((a, r) => a + calcPPH(r), 0) / cr.length * 10) / 10;
+                const col = CAT_COLORS[cat];
+                return `<div style="flex:1;min-width:120px;background:var(--surface);border:1px solid var(--border);border-top:3px solid ${col};border-radius:var(--radius);padding:12px">
+        <div style="font-size:12px;color:var(--text2);margin-bottom:4px">${cat}</div>
+        <div style="font-size:20px;font-weight:500">${pp}</div>
+        <div style="font-size:11px;color:var(--text3)">件/人 ｜ ${pph} 件/人時 ｜ ${cr.length}筆</div>
+      </div>`
+                ;
+            }).filter(Boolean);
+            catSection.innerHTML = catCards.length ? `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">${catCards.join('')}</div>` : '';
+        } else {
+            catSection.innerHTML = '';
+        }
+
+        // Machine rank
         const byM = {};
         recs.forEach(r => {
             if (!byM[r.machine])
@@ -1094,22 +1247,19 @@
         });
         const mArr = Object.entries(byM).map(([k, v]) => ({
             name: k,
-            val: Math.round(v.reduce((a, r) => a + calcPP(r), 0) / v.length),
-            pph: Math.round(v.reduce((a, r) => a + calcPPH(r), 0) / v.length * 10) / 10
+            val: Math.round(v.reduce((a, r) => a + calcPP(r), 0) / v.length)
         })).sort((a, b) => b.val - a.val);
         const maxV = mArr[0]?.val || 1;
         const minT = avgPP * 0.85;
-
         const lowMs = mArr.filter(m => m.val < minT);
-        document.getElementById('dash-alerts').innerHTML = lowMs.length
-        ? `<div class="alert alert-warn"><i class="ti ti-alert-triangle"></i><div><strong>效率偏低提醒</strong><br>${lowMs.map(m => m.name + '（' + m.val + ' 件/人）').join('、')} 低於平均 85%</div></div>` : '';
-
+        document.getElementById('dash-alerts').innerHTML = lowMs.length ? `<div class="alert alert-warn"><i class="ti ti-alert-triangle"></i><div><strong>效率偏低提醒</strong><br>${lowMs.map(m => m.name + '（' + m.val + ' 件/人）').join('、')} 低於平均 85%</div></div>` : '';
         document.getElementById('rank-list').innerHTML = mArr.map((m, i) => {
             const low = m.val < minT;
             const pct = Math.round(m.val / maxV * 100);
             return `<div class="rank-item"><div class="rank-num">${i + 1}</div><div class="rank-info"><div class="rank-name">${m.name}<span class="badge ${low ? 'badge-red' : 'badge-green'}">${low ? '偏低' : '正常'}</span></div><div class="rank-bar-bg"><div class="rank-bar" style="width:${pct}%;background:${low ? 'var(--red)' : 'var(--green)'}"></div></div></div><div class="rank-val">${m.val} <span style="font-size:10px;color:var(--text3)">件/人</span></div></div>`;
         }).join('');
 
+        // Leader chart
         const byL = {};
         recs.forEach(r => {
             if (!byL[r.leader])
@@ -1165,14 +1315,16 @@
             }
         });
 
+        // Detail table
         document.getElementById('detail-tbody').innerHTML = recs.slice(0, 20).map(r => {
             const pp = calcPP(r);
             const low = pp < minT;
-            return `<tr><td style="color:var(--text2)">${r.date}</td><td>${r.machine}</td><td>${r.leader}</td><td style="color:var(--text2)">${r.product}</td><td style="font-weight:500;color:${low ? 'var(--red-text)' : 'inherit'}">${pp}</td><td style="color:var(--text2)">${calcPPH(r)}</td></tr>`;
+            const bc = CAT_BADGE[r.category] || 'badge-blue';
+            return `<tr><td style="color:var(--text2)">${r.date}</td><td>${r.machine}</td><td>${r.leader}</td><td><span class="badge ${bc}">${r.category}</span></td><td style="color:var(--text2)">${r.flavor}</td><td style="font-weight:500;color:${low ? 'var(--red-text)' : 'inherit'}">${pp}</td><td style="color:var(--text2)">${calcPPH(r)}</td></tr>`;
         }).join('');
     }
 
-    // ===== TREND =====
+    // TREND
     let trendRange = 7,
         tChart = null,
         pphC = null,
@@ -1196,26 +1348,26 @@
     }
 
     function updateTrend() {
+        const fc = document.getElementById('trend-fil-category').value;
         const fl = document.getElementById('trend-fil-leader').value;
         const fm = document.getElementById('trend-fil-machine').value;
         const dates = getDateRange(trendRange);
-        const recs = state.records.filter(r => (!fl || r.leader === fl) && (!fm || r.machine === fm) && dates.includes(r.date));
-
+        const recs = state.records.filter(r => (!fc || r.category === fc) && (!fl || r.leader === fl) && (!fm || r.machine === fm) && dates.includes(r.date));
         const byDate = {};
         dates.forEach(d => byDate[d] = []);
         recs.forEach(r => {
             if (byDate[r.date])
                 byDate[r.date].push(r);
         });
-        const ppVals = dates.map(d => {
+        const lbls = dates.map(d => d.slice(5));
+        const ppV = dates.map(d => {
             const a = byDate[d];
             return a.length ? Math.round(a.reduce((s, r) => s + calcPP(r), 0) / a.length) : null;
         });
-        const pphVals = dates.map(d => {
+        const pphV = dates.map(d => {
             const a = byDate[d];
             return a.length ? Math.round(a.reduce((s, r) => s + calcPPH(r), 0) / a.length * 10) / 10 : null;
         });
-        const lbls = dates.map(d => d.slice(5));
 
         tChart = destroyChart(tChart);
         tChart = new Chart(document.getElementById('trendChart'), {
@@ -1224,7 +1376,7 @@
                 labels: lbls,
                 datasets: [{
                     label: '人均產值',
-                    data: ppVals,
+                    data: ppV,
                     borderColor: '#1D9E75',
                     backgroundColor: 'rgba(29,158,117,0.08)',
                     tension: 0.3,
@@ -1263,7 +1415,6 @@
                 }
             }
         });
-
         pphC = destroyChart(pphC);
         pphC = new Chart(document.getElementById('pphChart'), {
             type: 'line',
@@ -1271,7 +1422,7 @@
                 labels: lbls,
                 datasets: [{
                     label: '每人時產',
-                    data: pphVals,
+                    data: pphV,
                     borderColor: '#378ADD',
                     backgroundColor: 'rgba(55,138,221,0.08)',
                     tension: 0.3,
@@ -1311,11 +1462,11 @@
             }
         });
 
-        const leaderColors = ['#1D9E75', '#378ADD', '#D85A30', '#BA7517', '#7F77DD'];
+        const lColors = ['#1D9E75', '#378ADD', '#D85A30', '#BA7517', '#7F77DD'];
         const leaders = [...new Set(recs.map(r => r.leader))];
         const datasets = leaders.map((l, i) => ({
             label: l,
-            borderColor: leaderColors[i % leaderColors.length],
+            borderColor: lColors[i % lColors.length],
             backgroundColor: 'transparent',
             tension: 0.3,
             pointRadius: 3,
@@ -1325,7 +1476,7 @@
                 return a.length ? Math.round(a.reduce((s, r) => s + calcPP(r), 0) / a.length) : null;
             })
         }));
-        document.getElementById('trend-legend').innerHTML = leaders.map((l, i) => `<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:${leaderColors[i % leaderColors.length]}"></span>${l}</span>`).join('');
+        document.getElementById('trend-legend').innerHTML = leaders.map((l, i) => `<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:${lColors[i % lColors.length]}"></span>${l}</span>`).join('');
         ltChart = destroyChart(ltChart);
         ltChart = new Chart(document.getElementById('leaderTrendChart'), {
             type: 'line',
@@ -1365,27 +1516,130 @@
         });
     }
 
-    // ===== ADMIN =====
+    // ADMIN
     function renderAdminLists() {
-        renderAdminList('machines', 'machine');
-        renderAdminList('leaders', 'leader');
-        renderAdminList('products', 'product');
+        renderSimpleList('machines', 'machine');
+        renderSimpleList('leaders', 'leader');
+        renderFlavorAdmin();
     }
 
-    function renderAdminList(key, type) {
+    function renderSimpleList(key, type) {
         const el = document.getElementById('admin-' + key);
-        const arr = state[key];
-        el.innerHTML = arr.map((v, i) => `<div class="admin-item"><span class="admin-item-name">${v}</span><button class="btn btn-danger btn-sm" data-type="${type}" data-idx="${i}"><i class="ti ti-trash"></i></button></div>`).join('') || `<p style="color:var(--text3);font-size:13px">尚無項目</p>`;
-        el.querySelectorAll('button[data-type]').forEach(btn => {
-            btn.addEventListener('click', () => removeItem(btn.dataset.type, parseInt(btn.dataset.idx)));
+        el.innerHTML = state[key].map((v, i) => `<div class="admin-item"><span class="admin-item-name">${v}</span><button class="btn btn-danger btn-sm" data-type="${type}" data-idx="${i}"><i class="ti ti-trash"></i></button></div>`).join('') || `<p style="color:var(--text3);font-size:13px">尚無項目</p>`;
+        el.querySelectorAll('button[data-type]').forEach(btn => btn.addEventListener('click', () => removeItem(btn.dataset.type, parseInt(btn.dataset.idx))));
+    }
+
+    function renderFlavorAdmin() {
+        const wrap = document.getElementById('admin-flavors');
+        wrap.innerHTML = CATEGORIES.map(cat => {
+            const flavors = state.flavors[cat] || [];
+            const flavorItems = flavors.map((f, i) => `<div class="admin-sub"><span class="admin-sub-name">${f}</span><button class="btn btn-danger btn-sm" data-cat="${cat}" data-fidx="${i}"><i class="ti ti-trash"></i></button></div>`).join('');
+            return `<div class="cat-section">
+      <div class="cat-header" onclick="toggleCat(this)">
+        <span class="cat-header-name"><span class="badge ${
+            CAT_BADGE[cat]}" style="margin-right:6px">${cat}</span>${flavors.length} 個口味</span>
+        <i class="ti ti-chevron-down" style="color:var(--text3)"></i>
+      </div>
+      <div class="cat-body" id="cat-body-${
+
+            cat}">
+        <div class="admin-list" id="flavor-list-${cat}" style="margin-bottom:8px">${flavorItems || '<p style="color:var(--text3);font-size:13px">尚無口味</p>'}</div>
+        <div class="admin-add-row">
+          <input type="text" class="form-control" id="new-flavor-${
+            cat}" placeholder="新增口味名稱">
+          <button class="btn btn-primary" data-addcat="${cat}"><i class="ti ti-plus"></i></button>
+        </div>
+      </div>
+    </div>`
+
+
+            ;
+        }).join('');
+
+        // Bind delete flavor
+        wrap.querySelectorAll('button[data-cat]').forEach(btn => {
+            btn.addEventListener('click', () => removeFlavor(btn.dataset.cat, parseInt(btn.dataset.fidx)));
         });
+        // Bind add flavor
+        wrap.querySelectorAll('button[data-addcat]').forEach(btn => {
+            btn.addEventListener('click', () => addFlavor(btn.dataset.addcat));
+        });
+        // Enter key
+        CATEGORIES.forEach(cat => {
+            const inp = document.getElementById('new-flavor-' + cat);
+            if (inp)
+                inp.addEventListener('keydown', e => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addFlavor(cat);
+                    }
+                });
+        });
+    }
+
+    function toggleCat(header) {
+        const body = header.nextElementSibling;
+        body.classList.toggle('open');
+        const icon = header.querySelector('i');
+        icon.className = body.classList.contains('open') ? 'ti ti-chevron-up' : 'ti ti-chevron-down';
+        icon.style.color = 'var(--text3)';
+    }
+
+    async function addFlavor(cat) {
+        const inp = document.getElementById('new-flavor-' + cat);
+        const val = inp.value.trim();
+        if (!val) {
+            toast('⚠ 請輸入口味名稱');
+            return;
+        }
+        if (!state.flavors[cat])
+            state.flavors[cat] = [];
+        if (state.flavors[cat].includes(val)) {
+            toast('⚠ 已存在');
+            return;
+        }
+        state.flavors[cat].push(val);
+        await saveSettings('flavors');
+        inp.value = '';
+        renderFlavorAdmin();
+        // Re-open the section
+        const body = document.getElementById('cat-body-' + cat);
+        if (body) {
+            body.classList.add('open');
+            const h = body.previousElementSibling;
+            if (h) {
+                const ic = h.querySelector('i');
+                if (ic)
+                    ic.className = 'ti ti-chevron-up';
+            }
+        }
+        toast('✓ 已新增：' + val);
+    }
+
+    async function removeFlavor(cat, idx) {
+        const name = state.flavors[cat][idx];
+        if (!confirm('確定刪除口味「' + name + '」？'))
+            return;
+        state.flavors[cat].splice(idx, 1);
+        await saveSettings('flavors');
+        renderFlavorAdmin();
+        const body = document.getElementById('cat-body-' + cat);
+        if (body) {
+            body.classList.add('open');
+            const h = body.previousElementSibling;
+            if (h) {
+                const ic = h.querySelector('i');
+                if (ic)
+                    ic.className = 'ti ti-chevron-up';
+            }
+        }
+        toast('已刪除：' + name);
     }
 
     async function addItem(type) {
         const keyMap = {
             machine: 'machines',
-            leader: 'leaders',
-            product: 'products'
+            leader: 'leaders'
         };
         const key = keyMap[type];
         const inp = document.getElementById('new-' + type);
@@ -1409,8 +1663,7 @@
     async function removeItem(type, idx) {
         const keyMap = {
             machine: 'machines',
-            leader: 'leaders',
-            product: 'products'
+            leader: 'leaders'
         };
         const key = keyMap[type];
         const name = state[key][idx];
@@ -1431,23 +1684,23 @@
             state.records = [];
             renderRecentTable();
             toast('已清除所有記錄');
-        } catch (e) {
+        }
+        catch (e) {
             toast('⚠ 清除失敗：' + e.message);
         }
     }
 
-    // ===== NAV =====
+    // NAV
     function goPage(id) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         document.getElementById('page-' + id).classList.add('active');
-        const idx = {
+        document.querySelectorAll('.nav-item')[{
             record: 0,
             dashboard: 1,
             trend: 2,
             admin: 3
-        }[id];
-        document.querySelectorAll('.nav-item')[idx].classList.add('active');
+        }[id]].classList.add('active');
         if (id === 'dashboard')
             updateDash();
         if (id === 'trend')
@@ -1456,9 +1709,32 @@
             renderAdminLists();
     }
 
-    // ===== INIT =====
+    // INIT — ensure flavors key exists in Supabase
+    async function ensureFlavorsKey() {
+        const r = await sbFetch('settings?key=eq.flavors');
+        if (!r.ok)
+            return;
+        const rows = await r.json();
+        if (!rows.length) {
+            // Insert default empty flavors
+            await sbFetch('settings', {
+                method: 'POST',
+                body: JSON.stringify({
+                    key: 'flavors',
+                    value: {
+                        獨享包: [],
+                        鐵盒: [],
+                        單片: [],
+                        漢餅: []
+                    }
+                })
+            });
+        }
+    }
+
     async function init() {
         try {
+            await ensureFlavorsKey();
             await loadSettings();
             await loadRecords();
             populateSelects();
@@ -1473,11 +1749,11 @@
         document.getElementById('loading-overlay').classList.add('hide');
     }
 
-    ['new-machine', 'new-leader', 'new-product'].forEach((id, i) => {
+    ['new-machine', 'new-leader'].forEach((id, i) => {
         document.getElementById(id).addEventListener('keydown', e => {
             if (e.key === 'Enter') {
                 e.preventDefault();
-                addItem(['machine', 'leader', 'product'][i]);
+                addItem(['machine', 'leader'][i]);
             }
         });
     });
