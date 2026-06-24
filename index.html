@@ -115,6 +115,7 @@ tr:last-child td{border-bottom:none}
   <div class="nav-item" onclick="goPage('dashboard')"><i class="ti ti-chart-bar"></i><span>儀表板</span></div>
   <div class="nav-item" onclick="goPage('trend')"><i class="ti ti-trending-up"></i><span>趨勢</span></div>
   <div class="nav-item" onclick="goPage('admin')"><i class="ti ti-settings"></i><span>設定</span></div>
+  <div class="nav-item" onclick="goPage('logs')"><i class="ti ti-database"></i><span>記錄管理</span></div>
 </div>
  
 <!-- ===== 記錄頁 ===== -->
@@ -181,7 +182,7 @@ tr:last-child td{border-bottom:none}
     <div class="card-title"><i class="ti ti-history"></i> 最近記錄</div>
     <div class="tbl-wrap">
       <table>
-        <thead><tr><th>機台</th><th>組長</th><th>類別</th><th>口味</th><th>人均</th><th>工時</th></tr></thead>
+        <thead><tr><th>機台</th><th>組長</th><th>類別</th><th>口味</th><th>人均</th><th>工時</th><th></th></tr></thead>
         <tbody id="recent-tbody"></tbody>
       </table>
     </div>
@@ -287,6 +288,38 @@ tr:last-child td{border-bottom:none}
     <div class="card-title" style="color:var(--red-text)"><i class="ti ti-trash"></i> 危險操作</div>
     <p style="font-size:13px;color:var(--text2);margin-bottom:10px">清除所有產值記錄，設定資料不受影響。</p>
     <button class="btn btn-danger" onclick="clearRecords()"><i class="ti ti-trash"></i> 清除所有記錄</button>
+  </div>
+</div>
+ 
+ 
+<!-- ===== 記錄管理 ===== -->
+<div id="page-logs" class="page">
+  <div class="filter-bar" style="margin-bottom:8px">
+    <select class="form-control" id="log-fil-category" onchange="renderLogs()">
+      <option value="">所有類別</option>
+      <option>獨享包</option><option>鐵盒</option><option>單片</option><option>漢餅</option>
+    </select>
+    <select class="form-control" id="log-fil-leader" onchange="renderLogs()"><option value="">所有組長</option></select>
+    <select class="form-control" id="log-fil-machine" onchange="renderLogs()"><option value="">所有機台</option></select>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+    <input type="date" class="form-control" id="log-date-from" onchange="renderLogs()" style="flex:1">
+    <span style="color:var(--text3);font-size:13px">至</span>
+    <input type="date" class="form-control" id="log-date-to" onchange="renderLogs()" style="flex:1">
+  </div>
+  <div id="log-count" style="font-size:12px;color:var(--text3);margin-bottom:8px"></div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>日期</th><th>機台</th><th>組長</th><th>類別</th><th>口味</th><th>人數</th><th>產量</th><th>人均</th><th></th></tr></thead>
+        <tbody id="log-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px">
+    <button class="btn btn-sm" id="log-prev" onclick="logPage(-1)"><i class="ti ti-chevron-left"></i> 上一頁</button>
+    <span id="log-page-info" style="font-size:13px;color:var(--text2)"></span>
+    <button class="btn btn-sm" id="log-next" onclick="logPage(1)">下一頁 <i class="ti ti-chevron-right"></i></button>
   </div>
 </div>
  
@@ -459,12 +492,13 @@ async function submitRecord(){
 function renderRecentTable(){
   const tbody=document.getElementById('recent-tbody');
   const recent=state.records.slice(0,8);
-  if(!recent.length){tbody.innerHTML='<tr><td colspan="6" style="color:var(--text3);text-align:center;padding:16px">尚無記錄</td></tr>';return;}
+  if(!recent.length){tbody.innerHTML='<tr><td colspan="7" style="color:var(--text3);text-align:center;padding:16px">尚無記錄</td></tr>';return;}
   tbody.innerHTML=recent.map(r=>{
     const h=Math.round(calcHours(r.start,r.end)*10)/10;
     const bc=CAT_BADGE[r.category]||'badge-blue';
-    return`<tr><td>${r.machine}</td><td>${r.leader}</td><td><span class="badge ${bc}">${r.category}</span></td><td style="color:var(--text2)">${r.flavor}</td><td style="font-weight:500">${calcPP(r)}</td><td style="color:var(--text2)">${h}h</td></tr>`;
+    return`<tr><td>${r.machine}</td><td>${r.leader}</td><td><span class="badge ${bc}">${r.category}</span></td><td style="color:var(--text2)">${r.flavor}</td><td style="font-weight:500">${calcPP(r)}</td><td style="color:var(--text2)">${h}h</td><td><button class="btn btn-danger btn-sm" data-id="${r.id}"><i class="ti ti-trash"></i></button></td></tr>`;
   }).join('');
+  tbody.querySelectorAll('button[data-id]').forEach(btn=>btn.addEventListener('click',()=>deleteRecord(parseInt(btn.dataset.id))));
 }
  
 // DASHBOARD
@@ -578,6 +612,83 @@ function updateTrend(){
   ltChart=new Chart(document.getElementById('leaderTrendChart'),{type:'line',data:{labels:lbls,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:false,ticks:{font:{size:11}}},x:{ticks:{font:{size:11}},grid:{display:false}}}}});
 }
  
+ 
+ 
+// LOGS PAGE
+let logCurrentPage=0;
+const LOG_PAGE_SIZE=15;
+ 
+function getLogFiltered(){
+  const fc=document.getElementById('log-fil-category').value;
+  const fl=document.getElementById('log-fil-leader').value;
+  const fm=document.getElementById('log-fil-machine').value;
+  const df=document.getElementById('log-date-from').value;
+  const dt=document.getElementById('log-date-to').value;
+  return state.records.filter(r=>
+    (!fc||r.category===fc)&&(!fl||r.leader===fl)&&(!fm||r.machine===fm)&&
+    (!df||r.date>=df)&&(!dt||r.date<=dt)
+  );
+}
+ 
+function renderLogs(){
+  logCurrentPage=0;
+  renderLogPage();
+}
+ 
+function logPage(dir){
+  const recs=getLogFiltered();
+  const totalPages=Math.ceil(recs.length/LOG_PAGE_SIZE);
+  logCurrentPage=Math.max(0,Math.min(logCurrentPage+dir,totalPages-1));
+  renderLogPage();
+}
+ 
+function renderLogPage(){
+  const recs=getLogFiltered();
+  const total=recs.length;
+  const totalPages=Math.max(1,Math.ceil(total/LOG_PAGE_SIZE));
+  const start=logCurrentPage*LOG_PAGE_SIZE;
+  const page=recs.slice(start,start+LOG_PAGE_SIZE);
+ 
+  document.getElementById('log-count').textContent='共 '+total+' 筆記錄';
+  document.getElementById('log-page-info').textContent=(logCurrentPage+1)+' / '+totalPages+' 頁';
+  document.getElementById('log-prev').disabled=logCurrentPage===0;
+  document.getElementById('log-next').disabled=logCurrentPage>=totalPages-1;
+ 
+  const tbody=document.getElementById('log-tbody');
+  if(!page.length){
+    tbody.innerHTML='<tr><td colspan="9" style="color:var(--text3);text-align:center;padding:20px">無符合條件的記錄</td></tr>';
+    return;
+  }
+  tbody.innerHTML=page.map(r=>{
+    const bc=CAT_BADGE[r.category]||'badge-blue';
+    return`<tr>
+      <td style="color:var(--text2);white-space:nowrap">${r.date}</td>
+      <td>${r.machine}</td>
+      <td>${r.leader}</td>
+      <td><span class="badge ${bc}">${r.category}</span></td>
+      <td style="color:var(--text2)">${r.flavor}</td>
+      <td>${r.workers}人</td>
+      <td>${r.output}</td>
+      <td style="font-weight:500">${calcPP(r)}</td>
+      <td><button class="btn btn-danger btn-sm" data-id="${r.id}"><i class="ti ti-trash"></i></button></td>
+    </tr>`;
+  }).join('');
+  tbody.querySelectorAll('button[data-id]').forEach(btn=>btn.addEventListener('click',()=>deleteRecord(parseInt(btn.dataset.id))));
+}
+ 
+async function deleteRecord(id){
+  if(!confirm('確定刪除這筆記錄？')) return;
+  setSyncing();
+  try{
+    const r=await sbFetch('records?id=eq.'+id,{method:'DELETE'});
+    if(!r.ok) throw new Error();
+    state.records=state.records.filter(rec=>rec.id!==id);
+    setSynced();
+    toast('✓ 已刪除');
+    renderRecentTable();
+    renderLogPage();
+  }catch(e){setSyncError();toast('⚠ 刪除失敗');}
+}
  
 // EXPORT EXCEL
 function exportExcel(){
@@ -772,10 +883,22 @@ function goPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
-  document.querySelectorAll('.nav-item')[{record:0,dashboard:1,trend:2,admin:3}[id]].classList.add('active');
+  document.querySelectorAll('.nav-item')[{record:0,dashboard:1,trend:2,admin:3,logs:4}[id]].classList.add('active');
   if(id==='dashboard')updateDash();
   if(id==='trend')updateTrend();
   if(id==='admin')renderAdminLists();
+  if(id==='logs'){populateLogSelects();renderLogs();}
+}
+ 
+function populateLogSelects(){
+  ['log-fil-leader','log-fil-machine'].forEach((id,ki)=>{
+    const arr=ki===0?state.leaders:state.machines;
+    const ph=ki===0?'所有組長':'所有機台';
+    const el=document.getElementById(id);if(!el)return;
+    const cur=el.value;
+    el.innerHTML=`<option value="">${ph}</option>`+arr.map(v=>`<option value="${v}">${v}</option>`).join('');
+    if(arr.includes(cur))el.value=cur;
+  });
 }
  
 // INIT — ensure flavors key exists in Supabase
