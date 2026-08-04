@@ -99,17 +99,17 @@ tr:last-child td{border-bottom:none}
 </style>
 </head>
 <body>
- 
+
 <div class="loading-overlay" id="loading-overlay">
   <div class="spinner"></div>
   <div style="font-size:14px;color:var(--text2)">載入資料中...</div>
 </div>
- 
+
 <div class="sync-bar" id="sync-bar">
   <div class="sync-dot" id="sync-dot"></div>
   <span id="sync-label">已同步</span>
 </div>
- 
+
 <div class="nav">
   <div class="nav-item active" onclick="goPage('record')"><i class="ti ti-clipboard-plus"></i><span>記錄</span></div>
   <div class="nav-item" onclick="goPage('dashboard')"><i class="ti ti-chart-bar"></i><span>儀表板</span></div>
@@ -117,7 +117,7 @@ tr:last-child td{border-bottom:none}
   <div class="nav-item" onclick="goPage('admin')"><i class="ti ti-settings"></i><span>設定</span></div>
   <div class="nav-item" onclick="goPage('logs')"><i class="ti ti-database"></i><span>記錄管理</span></div>
 </div>
- 
+
 <!-- ===== 記錄頁 ===== -->
 <div id="page-record" class="page active">
   <div class="card">
@@ -168,6 +168,20 @@ tr:last-child td{border-bottom:none}
         <input type="datetime-local" class="form-control" id="f-end">
       </div>
     </div>
+    <div class="form-group" id="reason-group">
+      <label class="form-label">異常原因 <span style="color:var(--text3);font-size:11px">（選填）</span></label>
+      <select class="form-control" id="f-reason" onchange="onReasonChange()">
+        <option value="">— 無異常 —</option>
+        <option>設備故障</option>
+        <option>換線調整</option>
+        <option>人員訓練</option>
+        <option>原料不足</option>
+        <option>品質異常須重工</option>
+        <option>人力不足</option>
+        <option>其他</option>
+      </select>
+      <input type="text" class="form-control" id="f-reason-note" placeholder="補充說明（選填）" style="margin-top:6px;display:none">
+    </div>
     <div id="preview-box" style="background:var(--green-bg);border-radius:var(--radius);padding:10px 14px;margin-bottom:12px;display:none">
       <div style="font-size:12px;color:var(--green-text);margin-bottom:2px">預估結果</div>
       <div style="display:flex;gap:16px;flex-wrap:wrap">
@@ -188,7 +202,7 @@ tr:last-child td{border-bottom:none}
     </div>
   </div>
 </div>
- 
+
 <!-- ===== 儀表板 ===== -->
 <div id="page-dashboard" class="page">
   <div class="filter-bar">
@@ -199,18 +213,22 @@ tr:last-child td{border-bottom:none}
     <select class="form-control" id="fil-leader" onchange="updateDash()"><option value="">所有組長</option></select>
     <select class="form-control" id="fil-machine" onchange="updateDash()"><option value="">所有機台</option></select>
   </div>
- 
+
   <div class="metrics-grid">
     <div class="metric"><div class="metric-label">平均人均產值</div><div class="metric-value" id="m-avg">-</div><div class="metric-unit">件/人</div></div>
     <div class="metric"><div class="metric-label">總記錄筆數</div><div class="metric-value" id="m-count">-</div><div class="metric-unit">筆</div></div>
     <div class="metric"><div class="metric-label">平均每人時產</div><div class="metric-value" id="m-pph">-</div><div class="metric-unit">件/人時</div></div>
   </div>
- 
+
   <div id="dash-alerts"></div>
- 
+
   <!-- 各類別指標卡 -->
   <div id="cat-metrics-section"></div>
- 
+
+  <div class="card" id="suggestion-card" style="display:none">
+    <div class="card-title"><i class="ti ti-bulb"></i> 人員調配建議</div>
+    <div id="suggestion-list"></div>
+  </div>
   <div class="card">
     <div class="card-title"><i class="ti ti-medal"></i> 機台排行（人均產值）</div>
     <div id="rank-list"></div>
@@ -219,17 +237,21 @@ tr:last-child td{border-bottom:none}
     <div class="card-title"><i class="ti ti-users"></i> 組長績效比較</div>
     <div class="chart-wrap" style="height:200px"><canvas id="leaderChart"></canvas></div>
   </div>
+  <div class="card" id="reason-summary-card" style="display:none">
+    <div class="card-title"><i class="ti ti-alert-circle"></i> 異常記錄摘要</div>
+    <div id="reason-summary-list"></div>
+  </div>
   <div class="card">
     <div class="card-title"><i class="ti ti-list-details"></i> 記錄明細</div>
     <div class="tbl-wrap">
       <table>
-        <thead><tr><th>日期</th><th>機台</th><th>組長</th><th>類別</th><th>口味</th><th>人均</th><th>人時產</th></tr></thead>
+        <thead><tr><th>日期</th><th>機台</th><th>組長</th><th>類別</th><th>口味</th><th>人均</th><th>原因</th></tr></thead>
         <tbody id="detail-tbody"></tbody>
       </table>
     </div>
   </div>
 </div>
- 
+
 <!-- ===== 趨勢 ===== -->
 <div id="page-trend" class="page">
   <div class="date-pills">
@@ -260,7 +282,7 @@ tr:last-child td{border-bottom:none}
     <div class="chart-wrap" style="height:220px"><canvas id="leaderTrendChart"></canvas></div>
   </div>
 </div>
- 
+
 <!-- ===== 設定 ===== -->
 <div id="page-admin" class="page">
   <div class="card">
@@ -290,8 +312,8 @@ tr:last-child td{border-bottom:none}
     <button class="btn btn-danger" onclick="clearRecords()"><i class="ti ti-trash"></i> 清除所有記錄</button>
   </div>
 </div>
- 
- 
+
+
 <!-- ===== 記錄管理 ===== -->
 <div id="page-logs" class="page">
   <div class="filter-bar" style="margin-bottom:8px">
@@ -322,28 +344,28 @@ tr:last-child td{border-bottom:none}
     <button class="btn btn-sm" id="log-next" onclick="logPage(1)">下一頁 <i class="ti ti-chevron-right"></i></button>
   </div>
 </div>
- 
+
 <div class="toast" id="toast"></div>
- 
+
 <script>
 const SB_URL='https://hqtlkdhtdwgrusvmqymm.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxdGxrZGh0ZHdncnVzdm1xeW1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MzQ3MzYsImV4cCI6MjA5NTAxMDczNn0.ilYO3-l2r2HHv0FTSCGdnzH7-nOBZOEcuR-fKj2Lw_0';
 const CATEGORIES=['獨享包','鐵盒','單片','漢餅'];
 const CAT_COLORS={'獨享包':'#1D9E75','鐵盒':'#378ADD','單片':'#D85A30','漢餅':'#BA7517'};
 const CAT_BADGE={'獨享包':'badge-green','鐵盒':'badge-blue','單片':'badge-red','漢餅':'badge-amber'};
- 
+
 const sbFetch=(path,opts={})=>fetch(SB_URL+'/rest/v1/'+path,{
   headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=representation',...(opts.headers||{})},
   ...opts
 });
- 
+
 let state={machines:[],leaders:[],flavors:{獨享包:[],鐵盒:[],單片:[],漢餅:[]},records:[]};
- 
+
 // SYNC UI
 function setSyncing(){document.getElementById('sync-dot').className='sync-dot syncing';document.getElementById('sync-label').textContent='同步中...';}
 function setSynced(){document.getElementById('sync-dot').className='sync-dot';document.getElementById('sync-label').textContent='已同步';}
 function setSyncError(){document.getElementById('sync-dot').className='sync-dot error';document.getElementById('sync-label').textContent='連線錯誤';}
- 
+
 // API
 async function loadSettings(){
   const r=await sbFetch('settings?select=key,value');
@@ -355,7 +377,7 @@ async function loadSettings(){
     else if(row.key==='flavors') state.flavors={...state.flavors,...row.value};
   });
 }
- 
+
 async function saveSettings(key){
   setSyncing();
   try{
@@ -364,51 +386,53 @@ async function saveSettings(key){
     setSynced();
   }catch(e){setSyncError();toast('⚠ 儲存失敗，請檢查網路');}
 }
- 
+
 async function loadRecords(){
   const r=await sbFetch('records?select=*&order=start_time.desc&limit=300');
   if(!r.ok) throw new Error('載入記錄失敗');
   const rows=await r.json();
   state.records=rows.map(normalizeRecord);
 }
- 
+
 function normalizeRecord(r){
   return{
     id:r.id,machine:r.machine,leader:r.leader,workers:r.workers,output:r.output,
     category:r.category||'',flavor:r.flavor||r.product||'',
     start:r.start_time?r.start_time.slice(0,16):'',
     end:r.end_time?r.end_time.slice(0,16):'',
-    date:r.date||(r.start_time?r.start_time.slice(0,10):'')
+    date:r.date||(r.start_time?r.start_time.slice(0,10):''),
+    reason:r.reason||'',reasonNote:r.reason_note||''
   };
 }
- 
+
 async function insertRecord(rec){
   setSyncing();
   const r=await sbFetch('records',{method:'POST',body:JSON.stringify({
     machine:rec.machine,leader:rec.leader,workers:rec.workers,output:rec.output,
     product:rec.flavor,category:rec.category,flavor:rec.flavor,
-    start_time:rec.start,end_time:rec.end,date:rec.date
+    start_time:rec.start,end_time:rec.end,date:rec.date,
+    reason:rec.reason||'',reason_note:rec.reasonNote||''
   })});
   if(!r.ok){setSyncError();throw new Error('儲存失敗');}
   const rows=await r.json();
   setSynced();
   return normalizeRecord(rows[0]);
 }
- 
+
 async function deleteAllRecords(){
   setSyncing();
   const r=await sbFetch('records?id=gt.0',{method:'DELETE'});
   if(!r.ok){setSyncError();throw new Error();}
   setSynced();
 }
- 
+
 // UTIL
 function calcHours(s,e){if(!s||!e)return 0;const d=(new Date(e)-new Date(s))/3600000;return d>0?d:0;}
 function calcPP(r){return r.workers>0?Math.round(r.output/r.workers):0;}
 function calcPPH(r){const h=calcHours(r.start,r.end);if(!h||!r.workers)return 0;return Math.round(r.output/(r.workers*h)*10)/10;}
 function fmtDate(dt){return dt?dt.split('T')[0]:'';}
 function toast(msg,dur=2400){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur);}
- 
+
 // POPULATE SELECTS (machines, leaders only — category/flavor handled separately)
 function populateSelects(){
   [['f-machine','fil-machine','trend-fil-machine'],['f-leader','fil-leader','trend-fil-leader']].forEach(([fId,dId,tId],ki)=>{
@@ -423,7 +447,7 @@ function populateSelects(){
     });
   });
 }
- 
+
 // CATEGORY → FLAVOR cascade
 function onCategoryChange(){
   const cat=document.getElementById('f-category').value;
@@ -433,7 +457,12 @@ function onCategoryChange(){
   flavorSel.innerHTML='<option value="">— 選擇口味 —</option>'+flavors.map(f=>`<option value="${f}">${f}</option>`).join('');
   flavorSel.disabled=false;
 }
- 
+
+function onReasonChange(){
+  const v=document.getElementById('f-reason').value;
+  document.getElementById('f-reason-note').style.display=(v&&v!=='— 無異常 —')?'block':'none';
+}
+
 // RECORD PAGE
 function initDefaultTimes(){
   const now=new Date();const pad=n=>String(n).padStart(2,'0');
@@ -442,7 +471,7 @@ function initDefaultTimes(){
   document.getElementById('f-start').value=fmt(s);
   document.getElementById('f-end').value=fmt(now);
 }
- 
+
 function updatePreview(){
   const w=parseInt(document.getElementById('f-workers').value)||0;
   const o=parseInt(document.getElementById('f-output').value)||0;
@@ -461,7 +490,7 @@ function updatePreview(){
   document.getElementById(id).addEventListener('input',updatePreview);
   document.getElementById(id).addEventListener('change',updatePreview);
 });
- 
+
 async function submitRecord(){
   const machine=document.getElementById('f-machine').value;
   const leader=document.getElementById('f-leader').value;
@@ -471,24 +500,29 @@ async function submitRecord(){
   const flavor=document.getElementById('f-flavor').value;
   const start=document.getElementById('f-start').value;
   const end=document.getElementById('f-end').value;
+  const reason=document.getElementById('f-reason').value;
+  const reasonNote=document.getElementById('f-reason-note').value.trim();
   if(!machine||!leader||!workers||!output||!category||!flavor||!start||!end){toast('⚠ 請填寫所有欄位');return;}
   if(new Date(end)<=new Date(start)){toast('⚠ 結束時間需晚於開始時間');return;}
   const btn=document.getElementById('submit-btn');
   btn.disabled=true;btn.textContent='儲存中...';
   try{
-    const rec=await insertRecord({machine,leader,workers,output,category,flavor,start,end,date:fmtDate(start)});
+    const rec=await insertRecord({machine,leader,workers,output,category,flavor,start,end,date:fmtDate(start),reason,reasonNote});
     state.records.unshift(rec);
     renderRecentTable();
     document.getElementById('f-workers').value='';
     document.getElementById('f-output').value='';
     document.getElementById('f-category').value='';
     onCategoryChange();
+    document.getElementById('f-reason').value='';
+    document.getElementById('f-reason-note').value='';
+    document.getElementById('f-reason-note').style.display='none';
     document.getElementById('preview-box').style.display='none';
     toast('✓ 已儲存！人均產值 '+calcPP(rec)+' 件/人');
   }catch(e){toast('⚠ 儲存失敗：'+e.message);}
   btn.disabled=false;btn.innerHTML='<i class="ti ti-device-floppy"></i> 儲存記錄';
 }
- 
+
 function renderRecentTable(){
   const tbody=document.getElementById('recent-tbody');
   const recent=state.records.slice(0,8);
@@ -500,18 +534,18 @@ function renderRecentTable(){
   }).join('');
   tbody.querySelectorAll('button[data-id]').forEach(btn=>btn.addEventListener('click',()=>deleteRecord(parseInt(btn.dataset.id))));
 }
- 
+
 // DASHBOARD
 let lChart=null;
 function destroyChart(c){if(c)c.destroy();return null;}
- 
+
 function getFiltered(catId,leadId,machId){
   const fc=document.getElementById(catId).value;
   const fl=document.getElementById(leadId).value;
   const fm=document.getElementById(machId).value;
   return state.records.filter(r=>(!fc||r.category===fc)&&(!fl||r.leader===fl)&&(!fm||r.machine===fm));
 }
- 
+
 function updateDash(){
   const recs=getFiltered('fil-category','fil-leader','fil-machine');
   if(!recs.length){
@@ -522,12 +556,12 @@ function updateDash(){
     document.getElementById('cat-metrics-section').innerHTML='';
     return;
   }
- 
+
   const avgPP=Math.round(recs.reduce((a,r)=>a+calcPP(r),0)/recs.length);
   document.getElementById('m-avg').textContent=avgPP;
   document.getElementById('m-count').textContent=recs.length;
   document.getElementById('m-pph').textContent=Math.round(recs.reduce((a,r)=>a+calcPPH(r),0)/recs.length*10)/10;
- 
+
   // 各類別指標卡（只在「所有類別」時顯示）
   const catFilter=document.getElementById('fil-category').value;
   const catSection=document.getElementById('cat-metrics-section');
@@ -548,19 +582,80 @@ function updateDash(){
   } else {
     catSection.innerHTML='';
   }
- 
-  // Machine rank
+
+  // Machine rank — 各類別各自算平均再標警示
   const byM={};
   recs.forEach(r=>{if(!byM[r.machine])byM[r.machine]=[];byM[r.machine].push(r);});
-  const mArr=Object.entries(byM).map(([k,v])=>({name:k,val:Math.round(v.reduce((a,r)=>a+calcPP(r),0)/v.length)})).sort((a,b)=>b.val-a.val);
-  const maxV=mArr[0]?.val||1;const minT=avgPP*0.85;
-  const lowMs=mArr.filter(m=>m.val<minT);
-  document.getElementById('dash-alerts').innerHTML=lowMs.length?`<div class="alert alert-warn"><i class="ti ti-alert-triangle"></i><div><strong>效率偏低提醒</strong><br>${lowMs.map(m=>m.name+'（'+m.val+' 件/人）').join('、')} 低於平均 85%</div></div>`:'';
+
+  // 計算各類別平均（用來做類別內比較）
+  const catAvgMap={};
+  CATEGORIES.forEach(cat=>{
+    const cr=recs.filter(r=>r.category===cat);
+    catAvgMap[cat]=cr.length?Math.round(cr.reduce((a,r)=>a+calcPP(r),0)/cr.length):0;
+  });
+
+  // 每個機台：找出它主要的類別，用該類別的平均來判斷偏低
+  const mArr=Object.entries(byM).map(([k,v])=>{
+    const pp=Math.round(v.reduce((a,r)=>a+calcPP(r),0)/v.length);
+    // 找這台機台最多的類別
+    const catCount={};v.forEach(r=>{catCount[r.category]=(catCount[r.category]||0)+1;});
+    const mainCat=Object.entries(catCount).sort((a,b)=>b[1]-a[1])[0]?.[0]||'';
+    const catAvg=catAvgMap[mainCat]||avgPP;
+    const low=pp<catAvg*0.85;
+    return{name:k,val:pp,mainCat,catAvg,low};
+  }).sort((a,b)=>b.val-a.val);
+
+  const maxV=mArr[0]?.val||1;
+  const lowMs=mArr.filter(m=>m.low);
+
+  // 警示（類別各自比較）
+  let alertHtml='';
+  if(lowMs.length){
+    const catFilter=document.getElementById('fil-category').value;
+    if(catFilter){
+      // 已篩選類別，直接顯示
+      alertHtml=`<div class="alert alert-warn"><i class="ti ti-alert-triangle"></i><div><strong>效率偏低提醒</strong><br>${lowMs.map(m=>m.name+'（'+m.val+' 件/人，'+m.mainCat+'平均 '+m.catAvg+'）').join('、')} 低於該類別平均 85%</div></div>`;
+    } else {
+      // 混合類別，分組顯示
+      const byCat={};
+      lowMs.forEach(m=>{if(!byCat[m.mainCat])byCat[m.mainCat]=[];byCat[m.mainCat].push(m);});
+      const lines=Object.entries(byCat).map(([cat,ms])=>`【${cat}】${ms.map(m=>m.name+'（'+m.val+' 件/人）').join('、')} 低於該類別平均 ${catAvgMap[cat]} 的 85%`).join('<br>');
+      alertHtml=`<div class="alert alert-warn"><i class="ti ti-alert-triangle"></i><div><strong>效率偏低提醒（依類別比較）</strong><br>${lines}</div></div>`;
+    }
+  }
+  document.getElementById('dash-alerts').innerHTML=alertHtml;
+
+  // 排行
   document.getElementById('rank-list').innerHTML=mArr.map((m,i)=>{
-    const low=m.val<minT;const pct=Math.round(m.val/maxV*100);
-    return`<div class="rank-item"><div class="rank-num">${i+1}</div><div class="rank-info"><div class="rank-name">${m.name}<span class="badge ${low?'badge-red':'badge-green'}">${low?'偏低':'正常'}</span></div><div class="rank-bar-bg"><div class="rank-bar" style="width:${pct}%;background:${low?'var(--red)':'var(--green)'}"></div></div></div><div class="rank-val">${m.val} <span style="font-size:10px;color:var(--text3)">件/人</span></div></div>`;
+    const pct=Math.round(m.val/maxV*100);
+    const catTag=m.mainCat?`<span class="badge badge-blue" style="font-size:10px">${m.mainCat}</span>`:'';
+    return`<div class="rank-item"><div class="rank-num">${i+1}</div><div class="rank-info"><div class="rank-name">${m.name}${catTag}<span class="badge ${m.low?'badge-red':'badge-green'}">${m.low?'偏低':'正常'}</span></div><div class="rank-bar-bg"><div class="rank-bar" style="width:${pct}%;background:${m.low?'var(--red)':'var(--green)'}"></div></div></div><div class="rank-val">${m.val} <span style="font-size:10px;color:var(--text3)">件/人</span></div></div>`;
   }).join('');
- 
+
+  // 人員調配建議
+  const suggCard=document.getElementById('suggestion-card');
+  const suggList=document.getElementById('suggestion-list');
+  if(lowMs.length&&mArr.length>=2){
+    const topMs=mArr.filter(m=>!m.low);
+    const suggestions=lowMs.slice(0,3).map(low=>{
+      const best=topMs.find(t=>t.mainCat===low.mainCat)||topMs[0];
+      if(!best)return'';
+      const gap=best.val-low.val;
+      const suggestMove=Math.max(1,Math.round(low.workers*0.2)||1);
+      return`<div style="padding:10px 0;border-bottom:1px solid var(--border)">
+        <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:4px">
+          <i class="ti ti-arrow-right" style="color:var(--green)"></i>
+          建議從 <strong>${best.name}</strong> 調 ${suggestMove} 人 → <strong>${low.name}</strong>
+        </div>
+        <div style="font-size:12px;color:var(--text2)">${low.name} 人均 ${low.val} 件/人，低於${low.mainCat?low.mainCat+'類別':''} 平均 ${low.catAvg} 件/人，差距 ${low.catAvg-low.val} 件/人</div>
+      </div>`;
+    }).filter(Boolean);
+    if(suggestions.length){
+      suggCard.style.display='block';
+      suggList.innerHTML=suggestions.join('')+'<div style="font-size:11px;color:var(--text3);padding-top:8px">※ 建議僅供參考，實際調配請主管依現場狀況判斷</div>';
+    } else { suggCard.style.display='none'; }
+  } else { suggCard.style.display='none'; }
+
   // Leader chart
   const byL={};
   recs.forEach(r=>{if(!byL[r.leader])byL[r.leader]=[];byL[r.leader].push(calcPP(r));});
@@ -569,24 +664,46 @@ function updateDash(){
   const lColors=['#1D9E75','#378ADD','#D85A30','#BA7517','#7F77DD'];
   lChart=destroyChart(lChart);
   lChart=new Chart(document.getElementById('leaderChart'),{type:'bar',data:{labels:lNames,datasets:[{label:'人均產值',data:lVals,backgroundColor:lNames.map((_,i)=>lColors[i%lColors.length]),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{font:{size:11}},grid:{color:'rgba(128,128,128,0.1)'}},x:{ticks:{font:{size:12}},grid:{display:false}}}}});
- 
+
   // Detail table
   document.getElementById('detail-tbody').innerHTML=recs.slice(0,20).map(r=>{
-    const pp=calcPP(r);const low=pp<minT;const bc=CAT_BADGE[r.category]||'badge-blue';
-    return`<tr><td style="color:var(--text2)">${r.date}</td><td>${r.machine}</td><td>${r.leader}</td><td><span class="badge ${bc}">${r.category}</span></td><td style="color:var(--text2)">${r.flavor}</td><td style="font-weight:500;color:${low?'var(--red-text)':'inherit'}">${pp}</td><td style="color:var(--text2)">${calcPPH(r)}</td></tr>`;
+    const pp=calcPP(r);
+    const bc=CAT_BADGE[r.category]||'badge-blue';
+    const mainCat=r.category;const catAvg=catAvgMap[mainCat]||avgPP;
+    const low=pp<catAvg*0.85;
+    const reasonTag=r.reason?`<span class="badge badge-red" style="font-size:10px">${r.reason}</span>`:'';
+    return`<tr><td style="color:var(--text2)">${r.date}</td><td>${r.machine}</td><td>${r.leader}</td><td><span class="badge ${bc}">${r.category}</span></td><td style="color:var(--text2)">${r.flavor}</td><td style="font-weight:500;color:${low?'var(--red-text)':'inherit'}">${pp}</td><td>${reasonTag}${r.reasonNote?'<span style="font-size:11px;color:var(--text2);margin-left:4px">'+r.reasonNote+'</span>':''}</td></tr>`;
   }).join('');
+
+  // 異常原因摘要
+  const reasonRecs=recs.filter(r=>r.reason);
+  const rsCard=document.getElementById('reason-summary-card');
+  const rsList=document.getElementById('reason-summary-list');
+  if(reasonRecs.length){
+    const byReason={};
+    reasonRecs.forEach(r=>{if(!byReason[r.reason])byReason[r.reason]=[];byReason[r.reason].push(r);});
+    rsCard.style.display='block';
+    rsList.innerHTML=Object.entries(byReason).map(([reason,rs])=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+        <div>
+          <span class="badge badge-red">${reason}</span>
+          <span style="font-size:12px;color:var(--text2);margin-left:8px">${rs.map(r=>r.machine).filter((v,i,a)=>a.indexOf(v)===i).join('、')}</span>
+        </div>
+        <span style="font-size:13px;font-weight:500;color:var(--text3)">${rs.length} 筆</span>
+      </div>`).join('')+'<div style="font-size:11px;color:var(--text3);padding-top:6px">共 '+reasonRecs.length+' 筆記錄標記異常原因</div>';
+  } else { rsCard.style.display='none'; }
 }
- 
+
 // TREND
 let trendRange=7,tChart=null,pphC=null,ltChart=null;
 function setRange(el,r){document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));el.classList.add('active');trendRange=r;updateTrend();}
- 
+
 function getDateRange(days){
   const dates=[];const now=new Date();
   for(let i=days-1;i>=0;i--){const d=new Date(now);d.setDate(d.getDate()-i);dates.push(d.toISOString().split('T')[0]);}
   return dates;
 }
- 
+
 function updateTrend(){
   const fc=document.getElementById('trend-fil-category').value;
   const fl=document.getElementById('trend-fil-leader').value;
@@ -598,12 +715,12 @@ function updateTrend(){
   const lbls=dates.map(d=>d.slice(5));
   const ppV=dates.map(d=>{const a=byDate[d];return a.length?Math.round(a.reduce((s,r)=>s+calcPP(r),0)/a.length):null;});
   const pphV=dates.map(d=>{const a=byDate[d];return a.length?Math.round(a.reduce((s,r)=>s+calcPPH(r),0)/a.length*10)/10:null;});
- 
+
   tChart=destroyChart(tChart);
   tChart=new Chart(document.getElementById('trendChart'),{type:'line',data:{labels:lbls,datasets:[{label:'人均產值',data:ppV,borderColor:'#1D9E75',backgroundColor:'rgba(29,158,117,0.08)',tension:0.3,fill:true,pointRadius:3,spanGaps:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:false,ticks:{font:{size:11}}},x:{ticks:{font:{size:11}},grid:{display:false}}}}});
   pphC=destroyChart(pphC);
   pphC=new Chart(document.getElementById('pphChart'),{type:'line',data:{labels:lbls,datasets:[{label:'每人時產',data:pphV,borderColor:'#378ADD',backgroundColor:'rgba(55,138,221,0.08)',tension:0.3,fill:true,pointRadius:3,spanGaps:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:false,ticks:{font:{size:11}}},x:{ticks:{font:{size:11}},grid:{display:false}}}}});
- 
+
   const lColors=['#1D9E75','#378ADD','#D85A30','#BA7517','#7F77DD'];
   const leaders=[...new Set(recs.map(r=>r.leader))];
   const datasets=leaders.map((l,i)=>({label:l,borderColor:lColors[i%lColors.length],backgroundColor:'transparent',tension:0.3,pointRadius:3,spanGaps:true,data:dates.map(d=>{const a=recs.filter(r=>r.date===d&&r.leader===l);return a.length?Math.round(a.reduce((s,r)=>s+calcPP(r),0)/a.length):null;})}));
@@ -611,13 +728,13 @@ function updateTrend(){
   ltChart=destroyChart(ltChart);
   ltChart=new Chart(document.getElementById('leaderTrendChart'),{type:'line',data:{labels:lbls,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:false,ticks:{font:{size:11}}},x:{ticks:{font:{size:11}},grid:{display:false}}}}});
 }
- 
- 
- 
+
+
+
 // LOGS PAGE
 let logCurrentPage=0;
 const LOG_PAGE_SIZE=15;
- 
+
 function getLogFiltered(){
   const fc=document.getElementById('log-fil-category').value;
   const fl=document.getElementById('log-fil-leader').value;
@@ -629,31 +746,31 @@ function getLogFiltered(){
     (!df||r.date>=df)&&(!dt||r.date<=dt)
   );
 }
- 
+
 function renderLogs(){
   logCurrentPage=0;
   renderLogPage();
 }
- 
+
 function logPage(dir){
   const recs=getLogFiltered();
   const totalPages=Math.ceil(recs.length/LOG_PAGE_SIZE);
   logCurrentPage=Math.max(0,Math.min(logCurrentPage+dir,totalPages-1));
   renderLogPage();
 }
- 
+
 function renderLogPage(){
   const recs=getLogFiltered();
   const total=recs.length;
   const totalPages=Math.max(1,Math.ceil(total/LOG_PAGE_SIZE));
   const start=logCurrentPage*LOG_PAGE_SIZE;
   const page=recs.slice(start,start+LOG_PAGE_SIZE);
- 
+
   document.getElementById('log-count').textContent='共 '+total+' 筆記錄';
   document.getElementById('log-page-info').textContent=(logCurrentPage+1)+' / '+totalPages+' 頁';
   document.getElementById('log-prev').disabled=logCurrentPage===0;
   document.getElementById('log-next').disabled=logCurrentPage>=totalPages-1;
- 
+
   const tbody=document.getElementById('log-tbody');
   if(!page.length){
     tbody.innerHTML='<tr><td colspan="9" style="color:var(--text3);text-align:center;padding:20px">無符合條件的記錄</td></tr>';
@@ -675,7 +792,7 @@ function renderLogPage(){
   }).join('');
   tbody.querySelectorAll('button[data-id]').forEach(btn=>btn.addEventListener('click',()=>deleteRecord(parseInt(btn.dataset.id))));
 }
- 
+
 async function deleteRecord(id){
   if(!confirm('確定刪除這筆記錄？')) return;
   setSyncing();
@@ -689,7 +806,7 @@ async function deleteRecord(id){
     renderLogPage();
   }catch(e){setSyncError();toast('⚠ 刪除失敗');}
 }
- 
+
 // EXPORT EXCEL
 function exportExcel(){
   const fc=document.getElementById('trend-fil-category').value;
@@ -697,9 +814,9 @@ function exportExcel(){
   const fm=document.getElementById('trend-fil-machine').value;
   const dates=getDateRange(trendRange);
   const recs=state.records.filter(r=>(!fc||r.category===fc)&&(!fl||r.leader===fl)&&(!fm||r.machine===fm)&&dates.includes(r.date));
- 
+
   if(!recs.length){toast('⚠ 目前篩選條件無資料可匯出');return;}
- 
+
   // Sheet 1: 明細
   const detail=recs.map(r=>({
     '日期':r.date,
@@ -715,7 +832,7 @@ function exportExcel(){
     '開始時間':r.start,
     '結束時間':r.end
   }));
- 
+
   // Sheet 2: 每日統計
   const byDate={};dates.forEach(d=>byDate[d]=[]);
   recs.forEach(r=>{if(byDate[r.date])byDate[r.date].push(r);});
@@ -729,7 +846,7 @@ function exportExcel(){
       '總產量':a.reduce((s,r)=>s+r.output,0)
     };
   });
- 
+
   // Sheet 3: 各機台統計
   const byM={};
   recs.forEach(r=>{if(!byM[r.machine])byM[r.machine]=[];byM[r.machine].push(r);});
@@ -740,7 +857,7 @@ function exportExcel(){
     '平均每人時產':Math.round(a.reduce((s,r)=>s+calcPPH(r),0)/a.length*10)/10,
     '總產量':a.reduce((s,r)=>s+r.output,0)
   })).sort((a,b)=>b['平均人均產值']-a['平均人均產值']);
- 
+
   // Sheet 4: 各組長統計
   const byL={};
   recs.forEach(r=>{if(!byL[r.leader])byL[r.leader]=[];byL[r.leader].push(r);});
@@ -751,32 +868,32 @@ function exportExcel(){
     '平均每人時產':Math.round(a.reduce((s,r)=>s+calcPPH(r),0)/a.length*10)/10,
     '總產量':a.reduce((s,r)=>s+r.output,0)
   })).sort((a,b)=>b['平均人均產值']-a['平均人均產值']);
- 
+
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(detail),'記錄明細');
   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(daily),'每日統計');
   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(machSummary),'機台統計');
   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(leaderSummary),'組長統計');
- 
+
   const today=new Date().toISOString().slice(0,10);
   const label=[fc,fl,fm].filter(Boolean).join('_')||'全部';
   XLSX.writeFile(wb,`包裝部產值_${label}_${today}.xlsx`);
   toast('✓ Excel 已下載！共 '+recs.length+' 筆資料');
 }
- 
+
 // ADMIN
 function renderAdminLists(){
   renderSimpleList('machines','machine');
   renderSimpleList('leaders','leader');
   renderFlavorAdmin();
 }
- 
+
 function renderSimpleList(key,type){
   const el=document.getElementById('admin-'+key);
   el.innerHTML=state[key].map((v,i)=>`<div class="admin-item"><span class="admin-item-name">${v}</span><button class="btn btn-danger btn-sm" data-type="${type}" data-idx="${i}"><i class="ti ti-trash"></i></button></div>`).join('')||`<p style="color:var(--text3);font-size:13px">尚無項目</p>`;
   el.querySelectorAll('button[data-type]').forEach(btn=>btn.addEventListener('click',()=>removeItem(btn.dataset.type,parseInt(btn.dataset.idx))));
 }
- 
+
 function renderFlavorAdmin(){
   const wrap=document.getElementById('admin-flavors');
   wrap.innerHTML=CATEGORIES.map(cat=>{
@@ -796,7 +913,7 @@ function renderFlavorAdmin(){
       </div>
     </div>`;
   }).join('');
- 
+
   // Bind delete flavor
   wrap.querySelectorAll('button[data-cat]').forEach(btn=>{
     btn.addEventListener('click',()=>removeFlavor(btn.dataset.cat,parseInt(btn.dataset.fidx)));
@@ -811,7 +928,7 @@ function renderFlavorAdmin(){
     if(inp) inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addFlavor(cat);}});
   });
 }
- 
+
 function toggleCat(header){
   const body=header.nextElementSibling;
   body.classList.toggle('open');
@@ -819,7 +936,7 @@ function toggleCat(header){
   icon.className=body.classList.contains('open')?'ti ti-chevron-up':'ti ti-chevron-down';
   icon.style.color='var(--text3)';
 }
- 
+
 async function addFlavor(cat){
   const inp=document.getElementById('new-flavor-'+cat);
   const val=inp.value.trim();
@@ -835,7 +952,7 @@ async function addFlavor(cat){
   if(body){body.classList.add('open');const h=body.previousElementSibling;if(h){const ic=h.querySelector('i');if(ic)ic.className='ti ti-chevron-up';}}
   toast('✓ 已新增：'+val);
 }
- 
+
 async function removeFlavor(cat,idx){
   const name=state.flavors[cat][idx];
   if(!confirm('確定刪除口味「'+name+'」？'))return;
@@ -846,7 +963,7 @@ async function removeFlavor(cat,idx){
   if(body){body.classList.add('open');const h=body.previousElementSibling;if(h){const ic=h.querySelector('i');if(ic)ic.className='ti ti-chevron-up';}}
   toast('已刪除：'+name);
 }
- 
+
 async function addItem(type){
   const keyMap={machine:'machines',leader:'leaders'};
   const key=keyMap[type];
@@ -860,7 +977,7 @@ async function addItem(type){
   renderAdminLists();populateSelects();
   toast('✓ 已新增：'+val);
 }
- 
+
 async function removeItem(type,idx){
   const keyMap={machine:'machines',leader:'leaders'};
   const key=keyMap[type];
@@ -871,13 +988,13 @@ async function removeItem(type,idx){
   renderAdminLists();populateSelects();
   toast('已刪除：'+name);
 }
- 
+
 async function clearRecords(){
   if(!confirm('確定清除所有 '+state.records.length+' 筆記錄？此動作無法復原。'))return;
   try{await deleteAllRecords();state.records=[];renderRecentTable();toast('已清除所有記錄');}
   catch(e){toast('⚠ 清除失敗：'+e.message);}
 }
- 
+
 // NAV
 function goPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -889,7 +1006,7 @@ function goPage(id){
   if(id==='admin')renderAdminLists();
   if(id==='logs'){populateLogSelects();renderLogs();}
 }
- 
+
 function populateLogSelects(){
   ['log-fil-leader','log-fil-machine'].forEach((id,ki)=>{
     const arr=ki===0?state.leaders:state.machines;
@@ -900,7 +1017,7 @@ function populateLogSelects(){
     if(arr.includes(cur))el.value=cur;
   });
 }
- 
+
 // INIT — ensure flavors key exists in Supabase
 async function ensureFlavorsKey(){
   const r=await sbFetch('settings?key=eq.flavors');
@@ -911,7 +1028,7 @@ async function ensureFlavorsKey(){
     await sbFetch('settings',{method:'POST',body:JSON.stringify({key:'flavors',value:{獨享包:[],鐵盒:[],單片:[],漢餅:[]}})});
   }
 }
- 
+
 async function init(){
   try{
     await ensureFlavorsKey();
@@ -928,11 +1045,11 @@ async function init(){
   }
   document.getElementById('loading-overlay').classList.add('hide');
 }
- 
+
 ['new-machine','new-leader'].forEach((id,i)=>{
   document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addItem(['machine','leader'][i]);}});
 });
- 
+
 init();
 </script>
 </body>
