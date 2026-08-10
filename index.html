@@ -60,6 +60,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Noto Sans TC',sans-serif;back
 .badge-red{background:var(--red-bg);color:var(--red-text)}
 .badge-blue{background:var(--blue-bg);color:var(--blue-text)}
 .badge-amber{background:var(--amber-bg);color:var(--amber-text)}
+.badge-purple{background:#EEEDFB;color:#4B44B0}
+.badge-pink{background:#FDE8F0;color:#B5346A}
 .alert{border-radius:var(--radius);padding:10px 14px;margin-bottom:12px;font-size:13px;display:flex;align-items:flex-start;gap:8px}
 .alert i{font-size:16px;margin-top:1px;flex-shrink:0}
 .alert-warn{background:var(--red-bg);color:var(--red-text)}
@@ -145,6 +147,8 @@ tr:last-child td{border-bottom:none}
           <option>鐵盒</option>
           <option>單片</option>
           <option>漢餅</option>
+          <option>圓夢</option>
+          <option>月餅</option>
         </select>
       </div>
       <div class="form-group">
@@ -174,6 +178,8 @@ tr:last-child td{border-bottom:none}
         <option value="">— 無異常 —</option>
         <option>設備故障</option>
         <option>換線調整</option>
+        <option>耗材替換</option>
+        <option>餅乾異常</option>
         <option>人員訓練</option>
         <option>原料不足</option>
         <option>品質異常須重工</option>
@@ -208,7 +214,7 @@ tr:last-child td{border-bottom:none}
   <div class="filter-bar">
     <select class="form-control" id="fil-category" onchange="updateDash()">
       <option value="">所有類別</option>
-      <option>獨享包</option><option>鐵盒</option><option>單片</option><option>漢餅</option>
+      <option>獨享包</option><option>鐵盒</option><option>單片</option><option>漢餅</option><option>圓夢</option><option>月餅</option>
     </select>
     <select class="form-control" id="fil-leader" onchange="updateDash()"><option value="">所有組長</option></select>
     <select class="form-control" id="fil-machine" onchange="updateDash()"><option value="">所有機台</option></select>
@@ -262,7 +268,7 @@ tr:last-child td{border-bottom:none}
   <div class="filter-bar">
     <select class="form-control" id="trend-fil-category" onchange="updateTrend()">
       <option value="">所有類別</option>
-      <option>獨享包</option><option>鐵盒</option><option>單片</option><option>漢餅</option>
+      <option>獨享包</option><option>鐵盒</option><option>單片</option><option>漢餅</option><option>圓夢</option><option>月餅</option>
     </select>
     <select class="form-control" id="trend-fil-leader" onchange="updateTrend()"><option value="">所有組長</option></select>
     <select class="form-control" id="trend-fil-machine" onchange="updateTrend()"><option value="">所有機台</option></select>
@@ -271,13 +277,18 @@ tr:last-child td{border-bottom:none}
   <div class="card">
     <div class="card-title"><i class="ti ti-chart-dots"></i> 人數 vs 人均產值（找出最佳人數）</div>
     <div style="font-size:12px;color:var(--text3);margin-bottom:8px">每個點代表一筆記錄。人均產值最高的那個人數，就是這條線的最佳配置。</div>
-    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+    <div style="display:flex;gap:8px;margin-bottom:6px;flex-wrap:wrap">
       <select class="form-control" id="scatter-machine" onchange="updateScatter()" style="flex:1;min-width:100px">
         <option value="">所有機台</option>
       </select>
-      <select class="form-control" id="scatter-category" onchange="updateScatter()" style="flex:1;min-width:100px">
+      <select class="form-control" id="scatter-category" onchange="onScatterCategoryChange()" style="flex:1;min-width:100px">
         <option value="">所有類別</option>
-        <option>獨享包</option><option>鐵盒</option><option>單片</option><option>漢餅</option>
+        <option>獨享包</option><option>鐵盒</option><option>單片</option><option>漢餅</option><option>圓夢</option><option>月餅</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+      <select class="form-control" id="scatter-flavor" onchange="updateScatter()" style="flex:1;min-width:100px">
+        <option value="">所有口味</option>
       </select>
     </div>
     <div id="scatter-insight" style="display:none;background:var(--green-bg);border-radius:var(--radius);padding:8px 12px;margin-bottom:10px;font-size:12px;color:var(--green-text)"></div>
@@ -335,7 +346,7 @@ tr:last-child td{border-bottom:none}
   <div class="filter-bar" style="margin-bottom:8px">
     <select class="form-control" id="log-fil-category" onchange="renderLogs()">
       <option value="">所有類別</option>
-      <option>獨享包</option><option>鐵盒</option><option>單片</option><option>漢餅</option>
+      <option>獨享包</option><option>鐵盒</option><option>單片</option><option>漢餅</option><option>圓夢</option><option>月餅</option>
     </select>
     <select class="form-control" id="log-fil-leader" onchange="renderLogs()"><option value="">所有組長</option></select>
     <select class="form-control" id="log-fil-machine" onchange="renderLogs()"><option value="">所有機台</option></select>
@@ -366,16 +377,16 @@ tr:last-child td{border-bottom:none}
 <script>
 const SB_URL='https://hqtlkdhtdwgrusvmqymm.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxdGxrZGh0ZHdncnVzdm1xeW1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MzQ3MzYsImV4cCI6MjA5NTAxMDczNn0.ilYO3-l2r2HHv0FTSCGdnzH7-nOBZOEcuR-fKj2Lw_0';
-const CATEGORIES=['獨享包','鐵盒','單片','漢餅'];
-const CAT_COLORS={'獨享包':'#1D9E75','鐵盒':'#378ADD','單片':'#D85A30','漢餅':'#BA7517'};
-const CAT_BADGE={'獨享包':'badge-green','鐵盒':'badge-blue','單片':'badge-red','漢餅':'badge-amber'};
+const CATEGORIES=['獨享包','鐵盒','單片','漢餅','圓夢','月餅'];
+const CAT_COLORS={'獨享包':'#1D9E75','鐵盒':'#378ADD','單片':'#D85A30','漢餅':'#BA7517','圓夢':'#7F77DD','月餅':'#E87BA4'};
+const CAT_BADGE={'獨享包':'badge-green','鐵盒':'badge-blue','單片':'badge-red','漢餅':'badge-amber','圓夢':'badge-purple','月餅':'badge-pink'};
 
 const sbFetch=(path,opts={})=>fetch(SB_URL+'/rest/v1/'+path,{
   headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=representation',...(opts.headers||{})},
   ...opts
 });
 
-let state={machines:[],leaders:[],flavors:{獨享包:[],鐵盒:[],單片:[],漢餅:[]},records:[]};
+let state={machines:[],leaders:[],flavors:{獨享包:[],鐵盒:[],單片:[],漢餅:[],圓夢:[],月餅:[]},records:[]};
 
 // SYNC UI
 function setSyncing(){document.getElementById('sync-dot').className='sync-dot syncing';document.getElementById('sync-label').textContent='同步中...';}
@@ -757,14 +768,27 @@ function populateScatterMachines(){
   const cur = sel.value;
   sel.innerHTML = '<option value="">所有機台</option>' + state.machines.map(m=>`<option value="${m}">${m}</option>`).join('');
   if(state.machines.includes(cur)) sel.value = cur;
+  // reset flavor
+  const flSel = document.getElementById('scatter-flavor');
+  if(flSel) flSel.innerHTML = '<option value="">所有口味</option>';
+}
+
+function onScatterCategoryChange(){
+  const cat = document.getElementById('scatter-category').value;
+  const flSel = document.getElementById('scatter-flavor');
+  const flavors = cat ? (state.flavors[cat] || []) : [];
+  flSel.innerHTML = '<option value="">所有口味</option>' + flavors.map(f=>`<option value="${f}">${f}</option>`).join('');
+  updateScatter();
 }
 
 function updateScatter(){
   const fm = document.getElementById('scatter-machine').value;
   const fc = document.getElementById('scatter-category').value;
+  const ff = document.getElementById('scatter-flavor').value;
   const recs = state.records.filter(r =>
     (!fm || r.machine === fm) &&
     (!fc || r.category === fc) &&
+    (!ff || r.flavor === ff) &&
     r.workers > 0 && r.output > 0
   );
 
@@ -1166,7 +1190,7 @@ async function ensureFlavorsKey(){
   const rows=await r.json();
   if(!rows.length){
     // Insert default empty flavors
-    await sbFetch('settings',{method:'POST',body:JSON.stringify({key:'flavors',value:{獨享包:[],鐵盒:[],單片:[],漢餅:[]}})});
+    await sbFetch('settings',{method:'POST',body:JSON.stringify({key:'flavors',value:{獨享包:[],鐵盒:[],單片:[],漢餅:[],圓夢:[],月餅:[]}})});
   }
 }
 
