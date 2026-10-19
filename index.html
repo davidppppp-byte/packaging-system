@@ -4,375 +4,1052 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>包裝部人均產值系統</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Noto+Sans+TC:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
+/* ── RESET & TOKENS ─────────────────────────────── */
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#f7f7f5;--surface:#ffffff;--surface2:#f2f2ef;
-  --border:#e2e2de;
-  --text:#1a1a18;--text2:#6b6b65;--text3:#9b9b95;
-  --green:#1D9E75;--green-bg:#E1F5EE;--green-text:#0F6E56;
-  --red:#D85A30;--red-bg:#FAECE7;--red-text:#993C1D;
-  --blue:#378ADD;--blue-bg:#E6F1FB;--blue-text:#185FA5;
-  --amber:#BA7517;--amber-bg:#FAEEDA;--amber-text:#854F0B;
-  --radius:8px;--radius-lg:12px;
+  --ink:#0F1A16;
+  --forest:#0D6B55;
+  --forest-deep:#09503F;
+  --sage:#4A9B7F;
+  --sage-light:#7DBDA6;
+  --mist:#EDF4F1;
+  --mist-deep:#D5EAE4;
+  --surface:#FFFFFF;
+  --copper:#B86B2F;
+  --ash:#8A9992;
+  --ash-light:#C2CEC9;
+  --wire:#DDE8E4;
+  --wire-light:#EEF3F1;
+  --red:#C84B31;
+  --red-mist:#FBEFEC;
+  --amber:#A06820;
+  --amber-mist:#FBF3E8;
+  --blue:#2563A8;
+  --blue-mist:#EBF0FB;
+  --purple:#5B52C4;
+  --purple-mist:#EEECFB;
+  --pink:#B5346A;
+  --pink-mist:#FBE8F1;
+
+  --cat-独享包:#1D9E75;
+  --cat-铁盒:#378ADD;
+  --cat-单片:#D85A30;
+  --cat-汉饼:#BA7517;
+  --cat-圆梦:#7F77DD;
+  --cat-月饼:#E87BA4;
+
+  --r0:0px;
+  --r2:2px;
+  --r4:4px;
+  --r6:6px;
+  --nav-h:56px;
+  --ease-spring:cubic-bezier(0.16,1,0.3,1);
 }
-body{font-family:-apple-system,BlinkMacSystemFont,'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text);font-size:15px;min-height:100vh}
-.nav{display:flex;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
-.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 4px;cursor:pointer;font-size:11px;color:var(--text3);border-bottom:2px solid transparent;transition:all 0.15s}
-.nav-item i{font-size:20px}
-.nav-item.active{color:var(--green);border-bottom-color:var(--green)}
-.page{display:none;padding:16px;max-width:600px;margin:0 auto;padding-bottom:40px}
-.page.active{display:block}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;margin-bottom:12px}
-.card-title{font-size:13px;font-weight:500;color:var(--text2);margin-bottom:12px;display:flex;align-items:center;gap:6px}
-.form-group{margin-bottom:12px}
-.form-label{font-size:12px;color:var(--text2);margin-bottom:4px;display:block}
-.form-control{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:15px;background:var(--surface);color:var(--text);outline:none;transition:border 0.15s}
-.form-control:focus{border-color:var(--green)}
-.form-control:disabled{background:var(--surface2);color:var(--text3)}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.btn{padding:10px 16px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all 0.15s}
-.btn:hover{background:var(--surface2)}
-.btn-primary{background:var(--green);color:#fff;border-color:var(--green)}
-.btn-primary:hover{background:#179065}
-.btn-full{width:100%;justify-content:center;padding:13px}
-.btn-sm{padding:5px 10px;font-size:12px}
-.btn-danger{color:var(--red-text);border-color:var(--red-bg);background:var(--red-bg)}
-.btn-danger:hover{background:#f5c4b3}
-.metrics-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
-.metric{background:var(--surface2);border-radius:var(--radius);padding:12px}
-.metric-label{font-size:11px;color:var(--text3);margin-bottom:2px}
-.metric-value{font-size:22px;font-weight:500}
-.metric-unit{font-size:11px;color:var(--text3)}
-.rank-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
-.rank-item:last-child{border-bottom:none}
-.rank-num{font-size:13px;font-weight:500;color:var(--text3);width:18px;text-align:center}
-.rank-info{flex:1}
-.rank-name{font-size:13px;margin-bottom:3px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.rank-bar-bg{height:5px;background:var(--surface2);border-radius:3px;overflow:hidden}
-.rank-bar{height:5px;border-radius:3px;transition:width 0.5s ease}
-.rank-val{font-size:13px;font-weight:500;min-width:60px;text-align:right}
-.badge{font-size:11px;padding:2px 7px;border-radius:10px;font-weight:500}
-.badge-green{background:var(--green-bg);color:var(--green-text)}
-.badge-red{background:var(--red-bg);color:var(--red-text)}
-.badge-blue{background:var(--blue-bg);color:var(--blue-text)}
-.badge-amber{background:var(--amber-bg);color:var(--amber-text)}
-.badge-purple{background:#EEEDFB;color:#4B44B0}
-.badge-pink{background:#FDE8F0;color:#B5346A}
-.alert{border-radius:var(--radius);padding:10px 14px;margin-bottom:12px;font-size:13px;display:flex;align-items:flex-start;gap:8px}
-.alert i{font-size:16px;margin-top:1px;flex-shrink:0}
-.alert-warn{background:var(--red-bg);color:var(--red-text)}
-.tbl-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:13px}
-th{text-align:left;padding:8px;color:var(--text2);font-weight:500;border-bottom:1px solid var(--border);white-space:nowrap}
-td{padding:9px 8px;border-bottom:1px solid var(--border);vertical-align:middle}
-tr:last-child td{border-bottom:none}
-.admin-list{display:flex;flex-direction:column;gap:6px}
-.admin-item{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface2);border-radius:var(--radius);border:1px solid var(--border)}
-.admin-sub{padding:6px 12px 6px 24px;background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.admin-sub-name{font-size:13px;color:var(--text2)}
-.admin-add-row{display:flex;gap:8px;margin-top:8px}
-.admin-add-row input{flex:1}
-.cat-section{margin-bottom:16px;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
-.cat-header{background:var(--surface2);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
-.cat-header-name{font-size:14px;font-weight:500}
-.cat-body{padding:12px 14px;display:none}
-.cat-body.open{display:block}
-.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1a1a18;color:#fff;padding:10px 20px;border-radius:20px;font-size:14px;z-index:999;opacity:0;transition:opacity 0.2s;pointer-events:none;white-space:nowrap}
-.toast.show{opacity:1}
-.chart-wrap{position:relative;width:100%}
-.date-pills{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
-.pill{padding:5px 12px;border-radius:16px;font-size:12px;border:1px solid var(--border);background:var(--surface);cursor:pointer;color:var(--text2)}
-.pill.active{background:var(--green);color:#fff;border-color:var(--green)}
-.loading-overlay{position:fixed;inset:0;background:rgba(247,247,245,0.85);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;gap:12px}
-.loading-overlay.hide{display:none}
-.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin 0.7s linear infinite}
+
+/* ── BASE ─────────────────────────────── */
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:'Inter','Noto Sans TC',system-ui,sans-serif;
+  background:#F4F7F6;
+  color:var(--ink);
+  font-size:15px;
+  min-height:100vh;
+  font-variant-numeric:tabular-nums;
+  -webkit-font-smoothing:antialiased;
+}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+
+/* ── LOADING ─────────────────────────────── */
+.loading-overlay{
+  position:fixed;inset:0;
+  background:rgba(244,247,246,0.92);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  z-index:300;gap:16px;
+  backdrop-filter:blur(4px);
+  transition:opacity 0.3s var(--ease-spring);
+}
+.loading-overlay.hide{opacity:0;pointer-events:none}
+.spinner{
+  width:28px;height:28px;
+  border:2px solid var(--wire);
+  border-top-color:var(--forest);
+  border-radius:50%;
+  animation:spin 0.7s linear infinite;
+}
 @keyframes spin{to{transform:rotate(360deg)}}
-.sync-bar{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text3);padding:4px 12px;background:var(--surface2);border-radius:20px;position:fixed;top:56px;right:10px;z-index:99;border:1px solid var(--border)}
-.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--green)}
+.loading-txt{font-size:13px;color:var(--ash);letter-spacing:0.02em}
+
+/* ── SYNC INDICATOR ─────────────────────────────── */
+.sync-bar{
+  position:fixed;top:calc(var(--nav-h) + 8px);right:12px;
+  z-index:99;
+  display:flex;align-items:center;gap:6px;
+  font-size:11px;color:var(--ash);
+  padding:4px 10px;
+  background:var(--surface);
+  border:1px solid var(--wire);
+  border-radius:20px;
+  box-shadow:0 1px 4px rgba(0,0,0,0.06);
+  transition:opacity 0.3s;
+}
+.sync-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:var(--sage);
+  transition:background 0.3s;
+}
 .sync-dot.syncing{background:var(--amber);animation:pulse 1s ease-in-out infinite}
 .sync-dot.error{background:var(--red)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
-.filter-bar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
-.filter-bar select{flex:1;min-width:80px}
+
+/* ── NAV ─────────────────────────────── */
+.nav{
+  display:flex;
+  background:var(--surface);
+  border-top:1px solid var(--wire);
+  position:fixed;bottom:0;left:0;right:0;
+  z-index:100;
+  height:var(--nav-h);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.nav-item{
+  flex:1;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;
+  cursor:pointer;
+  font-size:10px;font-weight:500;
+  color:var(--ash);
+  letter-spacing:0.01em;
+  position:relative;
+  transition:color 0.2s;
+  -webkit-tap-highlight-color:transparent;
+}
+.nav-item i{font-size:22px;line-height:1;transition:transform 0.2s var(--ease-spring)}
+.nav-item.active{color:var(--forest)}
+.nav-item.active i{transform:scale(1.05)}
+.nav-item.active::after{
+  content:'';
+  position:absolute;top:0;left:20%;right:20%;
+  height:2px;background:var(--forest);
+  border-radius:0 0 2px 2px;
+}
+.nav-item:active i{transform:scale(0.92)}
+
+/* ── PAGE LAYOUT ─────────────────────────────── */
+.page{
+  display:none;
+  padding:20px 16px calc(var(--nav-h) + 24px);
+  max-width:640px;
+  margin:0 auto;
+}
+.page.active{display:block;animation:fadeUp 0.25s var(--ease-spring) both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}}
+
+/* ── CARDS ─────────────────────────────── */
+.card{
+  background:var(--surface);
+  border:1px solid var(--wire);
+  border-radius:var(--r6);
+  padding:20px;
+  margin-bottom:12px;
+  overflow:hidden;
+}
+.card--flush{padding:0}
+.card-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:18px;
+}
+.card-title{
+  font-size:12px;font-weight:600;
+  color:var(--ash);
+  letter-spacing:0.06em;
+  text-transform:uppercase;
+  display:flex;align-items:center;gap:7px;
+}
+.card-title i{font-size:14px;color:var(--sage)}
+
+/* ── PAGE HEADER ─────────────────────────────── */
+.page-header{
+  padding:20px 0 12px;
+  border-bottom:1px solid var(--wire);
+  margin-bottom:16px;
+}
+.page-header h1{
+  font-size:20px;font-weight:600;color:var(--ink);
+  letter-spacing:-0.02em;
+}
+.page-header p{font-size:13px;color:var(--ash);margin-top:2px}
+
+/* ── FORMS ─────────────────────────────── */
+.form-group{margin-bottom:14px}
+.form-label{
+  font-size:11px;font-weight:600;
+  color:var(--ash);
+  letter-spacing:0.04em;
+  text-transform:uppercase;
+  margin-bottom:6px;
+  display:block;
+}
+.form-control{
+  width:100%;
+  padding:11px 13px;
+  border:1px solid var(--wire);
+  border-radius:var(--r4);
+  font-size:14px;font-family:inherit;
+  background:var(--surface);
+  color:var(--ink);
+  outline:none;
+  transition:border-color 0.15s,box-shadow 0.15s;
+  -webkit-appearance:none;
+  appearance:none;
+}
+.form-control:focus{
+  border-color:var(--sage);
+  box-shadow:0 0 0 3px rgba(74,155,127,0.12);
+}
+.form-control:disabled{
+  background:var(--wire-light);
+  color:var(--ash-light);
+  cursor:not-allowed;
+}
+.form-control::placeholder{color:var(--ash-light)}
+select.form-control{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%238A9992' d='M0 0l6 8 6-8z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 13px center;
+  padding-right:36px;
+}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* ── BUTTONS ─────────────────────────────── */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:10px 16px;
+  border:1px solid var(--wire);
+  border-radius:var(--r4);
+  background:var(--surface);
+  color:var(--ink);
+  font-size:13px;font-weight:500;font-family:inherit;
+  cursor:pointer;
+  transition:background 0.15s,border-color 0.15s,transform 0.1s;
+  -webkit-tap-highlight-color:transparent;
+  white-space:nowrap;
+}
+.btn:hover{background:var(--wire-light)}
+.btn:active{transform:scale(0.97)}
+.btn-primary{
+  background:var(--forest);
+  color:#fff;
+  border-color:var(--forest);
+  font-weight:600;
+}
+.btn-primary:hover{background:var(--forest-deep);border-color:var(--forest-deep)}
+.btn-full{width:100%;padding:13px}
+.btn-sm{padding:6px 10px;font-size:12px}
+.btn-ghost{background:transparent;border-color:transparent;color:var(--ash)}
+.btn-ghost:hover{background:var(--wire-light);color:var(--ink)}
+.btn-danger{
+  background:var(--red-mist);
+  color:var(--red);
+  border-color:transparent;
+}
+.btn-danger:hover{background:#F5D5CD}
+.btn i{font-size:15px}
+
+/* ── METRICS GRID ─────────────────────────────── */
+.metrics-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:1px;
+  background:var(--wire);
+  border:1px solid var(--wire);
+  border-radius:var(--r6);
+  overflow:hidden;
+  margin-bottom:12px;
+}
+.metric{
+  background:var(--surface);
+  padding:16px 12px;
+  display:flex;flex-direction:column;gap:4px;
+}
+.metric-label{font-size:10px;font-weight:600;color:var(--ash);letter-spacing:0.05em;text-transform:uppercase}
+.metric-value{
+  font-size:26px;font-weight:600;color:var(--ink);
+  letter-spacing:-0.02em;line-height:1;
+}
+.metric-unit{font-size:10px;color:var(--ash-light)}
+
+/* ── RANK LIST ─────────────────────────────── */
+.rank-item{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 0;
+  border-bottom:1px solid var(--wire-light);
+}
+.rank-item:last-child{border-bottom:none}
+.rank-num{
+  font-size:11px;font-weight:700;color:var(--ash-light);
+  width:18px;text-align:center;flex-shrink:0;
+}
+.rank-num.top{color:var(--forest)}
+.rank-info{flex:1;min-width:0}
+.rank-name{
+  font-size:13px;font-weight:500;
+  display:flex;align-items:center;gap:6px;flex-wrap:wrap;
+  margin-bottom:5px;
+}
+.rank-bar-bg{height:3px;background:var(--wire-light);border-radius:2px;overflow:hidden}
+.rank-bar{height:3px;border-radius:2px;transition:width 0.6s var(--ease-spring)}
+.rank-val{
+  font-size:15px;font-weight:600;color:var(--ink);
+  white-space:nowrap;
+  display:flex;flex-direction:column;align-items:flex-end;gap:1px;
+}
+.rank-val-unit{font-size:9px;font-weight:400;color:var(--ash-light)}
+
+/* ── BADGES ─────────────────────────────── */
+.badge{
+  display:inline-flex;align-items:center;
+  font-size:10px;font-weight:600;
+  padding:2px 7px;
+  border-radius:3px;
+  letter-spacing:0.02em;
+}
+.badge-green{background:rgba(29,158,117,0.12);color:#0D6B55}
+.badge-red{background:rgba(200,75,49,0.1);color:#A83520}
+.badge-blue{background:rgba(37,99,168,0.1);color:#1A4E8A}
+.badge-amber{background:rgba(160,104,32,0.1);color:#835215}
+.badge-purple{background:rgba(91,82,196,0.1);color:#3D36A0}
+.badge-pink{background:rgba(181,52,106,0.1);color:#8F2554}
+.badge-low{background:var(--red-mist);color:var(--red)}
+.badge-ok{background:rgba(29,158,117,0.1);color:var(--forest)}
+
+/* ── STATUS TAG (category pill with left bar) ─────────────────────────────── */
+.cat-tag{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:11px;font-weight:500;color:var(--ink);
+}
+.cat-tag::before{
+  content:'';
+  display:inline-block;width:8px;height:8px;border-radius:50%;
+  background:var(--cat-color,var(--ash));
+  flex-shrink:0;
+}
+
+/* ── ALERTS ─────────────────────────────── */
+.alert{
+  border-radius:var(--r4);
+  padding:12px 14px;
+  margin-bottom:12px;
+  font-size:13px;
+  display:flex;align-items:flex-start;gap:10px;
+  border-left:3px solid currentColor;
+}
+.alert i{font-size:16px;flex-shrink:0;margin-top:1px}
+.alert-warn{
+  background:var(--amber-mist);
+  color:var(--amber);
+}
+.alert-info{
+  background:var(--mist);
+  color:var(--forest);
+}
+
+/* ── TABLES ─────────────────────────────── */
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:12px;min-width:400px}
+th{
+  text-align:left;
+  padding:10px 12px;
+  color:var(--ash);
+  font-weight:600;
+  font-size:10px;
+  letter-spacing:0.05em;
+  text-transform:uppercase;
+  border-bottom:1px solid var(--wire);
+  white-space:nowrap;
+  background:var(--wire-light);
+}
+td{
+  padding:11px 12px;
+  border-bottom:1px solid var(--wire-light);
+  vertical-align:middle;
+  color:var(--ink);
+}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--wire-light)}
+td.num{font-weight:600;font-variant-numeric:tabular-nums}
+td.muted{color:var(--ash)}
+
+/* ── FILTER BAR ─────────────────────────────── */
+.filter-bar{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  margin-bottom:16px;
+}
+.filter-bar.two-col{grid-template-columns:1fr 1fr}
+.filter-bar.four-col{grid-template-columns:1fr 1fr;gap:8px}
+
+/* ── DATE PILLS ─────────────────────────────── */
+.date-pills{
+  display:flex;gap:4px;margin-bottom:14px;
+  background:var(--wire-light);
+  padding:3px;border-radius:var(--r4);
+}
+.pill{
+  flex:1;
+  text-align:center;
+  padding:6px 8px;
+  border-radius:var(--r2);
+  font-size:12px;font-weight:500;
+  cursor:pointer;
+  color:var(--ash);
+  transition:all 0.15s;
+  -webkit-tap-highlight-color:transparent;
+}
+.pill.active{
+  background:var(--surface);
+  color:var(--forest);
+  font-weight:600;
+  box-shadow:0 1px 3px rgba(0,0,0,0.08);
+}
+
+/* ── PREVIEW BOX ─────────────────────────────── */
+.preview-box{
+  background:var(--mist);
+  border:1px solid var(--mist-deep);
+  border-left:3px solid var(--forest);
+  border-radius:var(--r4);
+  padding:12px 14px;
+  margin-bottom:14px;
+  display:none;
+}
+.preview-box.show{display:block;animation:fadeIn 0.2s var(--ease-spring)}
+@keyframes fadeIn{from{opacity:0}}
+.preview-row{
+  display:flex;gap:20px;flex-wrap:wrap;
+  margin-top:6px;
+}
+.preview-label{font-size:10px;font-weight:600;color:var(--ash);letter-spacing:0.05em;text-transform:uppercase}
+.preview-val{font-size:18px;font-weight:600;color:var(--forest);letter-spacing:-0.01em;line-height:1.1}
+.preview-unit{font-size:10px;color:var(--sage)}
+
+/* ── ADMIN LISTS ─────────────────────────────── */
+.admin-list{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.admin-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 12px;
+  background:var(--wire-light);
+  border:1px solid var(--wire);
+  border-radius:var(--r4);
+}
+.admin-item-name{font-size:13px;font-weight:500}
+.admin-sub{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:9px 12px 9px 20px;
+  background:var(--surface);
+  border:1px solid var(--wire);
+  border-radius:var(--r4);
+  margin-bottom:3px;
+}
+.admin-sub-name{font-size:13px;color:var(--ash)}
+.admin-add-row{display:flex;gap:8px;margin-top:8px}
+.admin-add-row input{flex:1}
+
+/* ── CATEGORY ACCORDION ─────────────────────────────── */
+.cat-section{
+  border:1px solid var(--wire);
+  border-radius:var(--r4);
+  overflow:hidden;
+  margin-bottom:6px;
+}
+.cat-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 14px;
+  cursor:pointer;
+  background:var(--wire-light);
+  user-select:none;
+  -webkit-tap-highlight-color:transparent;
+  transition:background 0.15s;
+}
+.cat-header:hover{background:var(--wire)}
+.cat-header-left{display:flex;align-items:center;gap:10px}
+.cat-header-name{font-size:13px;font-weight:600}
+.cat-header-count{font-size:11px;color:var(--ash)}
+.cat-body{padding:12px;display:none}
+.cat-body.open{display:block}
+.cat-color-bar{width:3px;height:16px;border-radius:2px;flex-shrink:0}
+
+/* ── TOAST ─────────────────────────────── */
+.toast{
+  position:fixed;bottom:calc(var(--nav-h) + 16px);left:50%;
+  transform:translateX(-50%) translateY(8px);
+  background:var(--ink);color:#fff;
+  padding:10px 18px;border-radius:20px;
+  font-size:13px;font-weight:500;
+  z-index:999;
+  opacity:0;pointer-events:none;
+  transition:opacity 0.2s,transform 0.2s var(--ease-spring);
+  white-space:nowrap;
+  max-width:calc(100vw - 32px);
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── CHART WRAP ─────────────────────────────── */
+.chart-wrap{position:relative;width:100%}
+
+/* ── SCATTER INSIGHT ─────────────────────────────── */
+.scatter-insight{
+  background:var(--mist);
+  border:1px solid var(--mist-deep);
+  border-radius:var(--r4);
+  padding:10px 13px;
+  margin-bottom:10px;
+  font-size:12px;color:var(--forest);
+  display:none;
+}
+.scatter-insight.show{display:block}
+.scatter-legend{
+  display:flex;flex-wrap:wrap;gap:10px;
+  margin-top:10px;font-size:11px;color:var(--ash);
+}
+.scatter-legend-item{display:flex;align-items:center;gap:5px}
+
+/* ── SUGGESTION CARD ─────────────────────────────── */
+.suggestion-item{
+  padding:12px 0;
+  border-bottom:1px solid var(--wire-light);
+  display:flex;flex-direction:column;gap:5px;
+}
+.suggestion-item:last-of-type{border-bottom:none}
+.suggestion-arrow{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:13px;font-weight:600;color:var(--forest);
+}
+.suggestion-detail{font-size:12px;color:var(--ash)}
+.suggestion-note{font-size:10px;color:var(--ash-light);padding-top:4px}
+
+/* ── CAT METRICS ─────────────────────────────── */
+.cat-metrics-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:8px;
+  margin-bottom:12px;
+}
+.cat-metric-card{
+  background:var(--surface);
+  border:1px solid var(--wire);
+  border-radius:var(--r4);
+  padding:14px;
+  border-left:3px solid var(--cat-color,var(--ash));
+  transition:box-shadow 0.15s;
+}
+.cat-metric-card:hover{box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+.cat-metric-name{font-size:11px;font-weight:600;color:var(--ash);letter-spacing:0.03em;margin-bottom:4px}
+.cat-metric-val{font-size:22px;font-weight:700;color:var(--ink);letter-spacing:-0.02em;line-height:1.1}
+.cat-metric-sub{font-size:10px;color:var(--ash-light);margin-top:3px}
+
+/* ── LOGS ─────────────────────────────── */
+.log-filter-area{
+  display:flex;flex-direction:column;gap:8px;
+  margin-bottom:14px;
+}
+.log-date-row{display:flex;align-items:center;gap:8px}
+.log-date-row .form-control{flex:1}
+.log-count-bar{
+  font-size:11px;color:var(--ash);
+  padding:4px 0;
+}
+.pagination{
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  padding:12px 0;
+}
+.page-info{font-size:12px;color:var(--ash)}
+
+/* ── REASON SUMMARY ─────────────────────────────── */
+.reason-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:9px 0;
+  border-bottom:1px solid var(--wire-light);
+}
+.reason-row:last-of-type{border-bottom:none}
+.reason-machines{font-size:11px;color:var(--ash);margin-top:2px}
+.reason-count{font-size:14px;font-weight:600;color:var(--ink)}
+
+/* ── TREND LEGEND ─────────────────────────────── */
+.trend-legend{
+  display:flex;flex-wrap:wrap;gap:8px;
+  margin-bottom:10px;
+  font-size:11px;
+}
+.legend-item{display:flex;align-items:center;gap:5px;color:var(--ash)}
+.legend-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+
+/* ── DANGER ZONE ─────────────────────────────── */
+.danger-card{
+  background:var(--surface);
+  border:1px solid rgba(200,75,49,0.2);
+  border-radius:var(--r6);
+  padding:16px 20px;
+  margin-bottom:12px;
+}
+.danger-title{
+  font-size:12px;font-weight:600;color:var(--red);
+  letter-spacing:0.04em;text-transform:uppercase;
+  display:flex;align-items:center;gap:6px;
+  margin-bottom:8px;
+}
+.danger-desc{font-size:13px;color:var(--ash);margin-bottom:12px}
+
+/* ── EMPTY STATE ─────────────────────────────── */
+.empty{
+  text-align:center;padding:32px 20px;
+  color:var(--ash-light);font-size:13px;
+}
+.empty i{display:block;font-size:28px;margin-bottom:8px;color:var(--wire)}
+
+/* ── DIVIDER ─────────────────────────────── */
+.divider{height:1px;background:var(--wire-light);margin:16px 0}
+
+/* ── RESPONSIVE ─────────────────────────────── */
+@media(max-width:390px){
+  .metrics-grid{grid-template-columns:repeat(3,1fr)}
+  .metric-value{font-size:22px}
+  .cat-metrics-grid{grid-template-columns:1fr}
+  .filter-bar{grid-template-columns:1fr}
+}
+@media(min-width:600px){
+  .page{padding-left:24px;padding-right:24px}
+}
+
+/* ── REDUCED MOTION ─────────────────────────────── */
+@media(prefers-reduced-motion:reduce){
+  *{animation-duration:0.01ms!important;transition-duration:0.01ms!important}
+}
 </style>
 </head>
 <body>
 
-<div class="loading-overlay" id="loading-overlay">
-  <div class="spinner"></div>
-  <div style="font-size:14px;color:var(--text2)">載入資料中...</div>
+<!-- Loading overlay -->
+<div class="loading-overlay" id="loading-overlay" role="status" aria-live="polite">
+  <div class="spinner" aria-hidden="true"></div>
+  <div class="loading-txt">載入資料中</div>
 </div>
 
-<div class="sync-bar" id="sync-bar">
-  <div class="sync-dot" id="sync-dot"></div>
+<!-- Sync bar -->
+<div class="sync-bar" id="sync-bar" aria-label="同步狀態">
+  <div class="sync-dot" id="sync-dot" aria-hidden="true"></div>
   <span id="sync-label">已同步</span>
 </div>
 
-<div class="nav">
-  <div class="nav-item active" onclick="goPage('record')"><i class="ti ti-clipboard-plus"></i><span>記錄</span></div>
-  <div class="nav-item" onclick="goPage('dashboard')"><i class="ti ti-chart-bar"></i><span>儀表板</span></div>
-  <div class="nav-item" onclick="goPage('trend')"><i class="ti ti-trending-up"></i><span>趨勢</span></div>
-  <div class="nav-item" onclick="goPage('admin')"><i class="ti ti-settings"></i><span>設定</span></div>
-  <div class="nav-item" onclick="goPage('logs')"><i class="ti ti-database"></i><span>記錄管理</span></div>
-</div>
+<!-- Bottom nav -->
+<nav class="nav" role="navigation">
+  <div class="nav-item active" onclick="goPage('record')" role="button" aria-label="記錄" tabindex="0">
+    <i class="ti ti-clipboard-plus" aria-hidden="true"></i>
+    <span>記錄</span>
+  </div>
+  <div class="nav-item" onclick="goPage('dashboard')" role="button" aria-label="儀表板" tabindex="0">
+    <i class="ti ti-chart-bar" aria-hidden="true"></i>
+    <span>儀表板</span>
+  </div>
+  <div class="nav-item" onclick="goPage('trend')" role="button" aria-label="趨勢" tabindex="0">
+    <i class="ti ti-trending-up" aria-hidden="true"></i>
+    <span>趨勢</span>
+  </div>
+  <div class="nav-item" onclick="goPage('admin')" role="button" aria-label="設定" tabindex="0">
+    <i class="ti ti-settings" aria-hidden="true"></i>
+    <span>設定</span>
+  </div>
+  <div class="nav-item" onclick="goPage('logs')" role="button" aria-label="記錄管理" tabindex="0">
+    <i class="ti ti-database" aria-hidden="true"></i>
+    <span>管理</span>
+  </div>
+</nav>
 
 <!-- ===== 記錄頁 ===== -->
-<div id="page-record" class="page active">
+<main id="page-record" class="page active" role="main">
+  <div class="page-header">
+    <h1>新增記錄</h1>
+    <p>記錄本次包裝作業的產值資料</p>
+  </div>
+
   <div class="card">
-    <div class="card-title"><i class="ti ti-clipboard-plus"></i> 新增產值記錄</div>
-    <div class="form-group">
-      <label class="form-label">機台</label>
-      <select class="form-control" id="f-machine"></select>
+    <div class="card-header">
+      <div class="card-title"><i class="ti ti-clipboard-plus"></i>作業資訊</div>
     </div>
+
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">組長</label>
-        <select class="form-control" id="f-leader"></select>
+        <label class="form-label" for="f-machine">機台</label>
+        <select class="form-control" id="f-machine"><option value="">— 選擇 —</option></select>
       </div>
       <div class="form-group">
-        <label class="form-label">人員數量</label>
+        <label class="form-label" for="f-leader">組長</label>
+        <select class="form-control" id="f-leader"><option value="">— 選擇 —</option></select>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label" for="f-category">類別</label>
+        <select class="form-control" id="f-category" onchange="onCategoryChange()">
+          <option value="">— 選擇 —</option>
+          <option>獨享包</option><option>鐵盒</option><option>單片</option>
+          <option>漢餅</option><option>圓夢</option><option>月餅</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="f-flavor">口味</label>
+        <select class="form-control" id="f-flavor" disabled>
+          <option value="">先選類別</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label" for="f-workers">人員數量</label>
         <input type="number" class="form-control" id="f-workers" placeholder="例：5" min="1">
       </div>
-    </div>
-    <div class="form-row">
       <div class="form-group">
-        <label class="form-label">類別</label>
-        <select class="form-control" id="f-category" onchange="onCategoryChange()">
-          <option value="">— 選擇類別 —</option>
-          <option>獨享包</option>
-          <option>鐵盒</option>
-          <option>單片</option>
-          <option>漢餅</option>
-          <option>圓夢</option>
-          <option>月餅</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label">口味</label>
-        <select class="form-control" id="f-flavor" disabled>
-          <option value="">— 先選類別 —</option>
-        </select>
+        <label class="form-label" for="f-output">總產量（件）</label>
+        <input type="number" class="form-control" id="f-output" placeholder="例：1200" min="1">
       </div>
     </div>
-    <div class="form-group">
-      <label class="form-label">總產量（件）</label>
-      <input type="number" class="form-control" id="f-output" placeholder="例：1200" min="1">
-    </div>
+
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">開始時間</label>
+        <label class="form-label" for="f-start">開始時間</label>
         <input type="datetime-local" class="form-control" id="f-start">
       </div>
       <div class="form-group">
-        <label class="form-label">結束時間</label>
+        <label class="form-label" for="f-end">結束時間</label>
         <input type="datetime-local" class="form-control" id="f-end">
       </div>
     </div>
+
     <div class="form-group" id="reason-group">
-      <label class="form-label">異常原因 <span style="color:var(--text3);font-size:11px">（選填）</span></label>
+      <label class="form-label" for="f-reason">異常原因<span style="font-weight:400;color:var(--ash-light);margin-left:6px">選填</span></label>
       <select class="form-control" id="f-reason" onchange="onReasonChange()">
-        <option value="">— 無異常 —</option>
-        <option>設備故障</option>
-        <option>換線調整</option>
-        <option>耗材替換</option>
-        <option>餅乾異常</option>
-        <option>人員訓練</option>
-        <option>原料不足</option>
-        <option>品質異常須重工</option>
-        <option>人力不足</option>
-        <option>其他</option>
+        <option value="">無異常</option>
+        <option>設備故障</option><option>換線調整</option><option>耗材替換</option>
+        <option>餅乾異常</option><option>人員訓練</option><option>原料不足</option>
+        <option>品質異常須重工</option><option>人力不足</option><option>其他</option>
       </select>
-      <input type="text" class="form-control" id="f-reason-note" placeholder="補充說明（選填）" style="margin-top:6px;display:none">
+      <input type="text" class="form-control" id="f-reason-note" placeholder="補充說明（選填）" style="margin-top:8px;display:none">
     </div>
-    <div id="preview-box" style="background:var(--green-bg);border-radius:var(--radius);padding:10px 14px;margin-bottom:12px;display:none">
-      <div style="font-size:12px;color:var(--green-text);margin-bottom:2px">預估結果</div>
-      <div style="display:flex;gap:16px;flex-wrap:wrap">
-        <span style="font-size:13px;color:var(--green-text)">工時：<strong id="prev-hours">-</strong> h</span>
-        <span style="font-size:13px;color:var(--green-text)">人均：<strong id="prev-pp">-</strong> 件/人</span>
-        <span style="font-size:13px;color:var(--green-text)">人時產：<strong id="prev-pph">-</strong> 件/人時</span>
+
+    <!-- Preview -->
+    <div class="preview-box" id="preview-box" role="status" aria-live="polite">
+      <div class="form-label" style="margin-bottom:8px">預估結果</div>
+      <div class="preview-row">
+        <div>
+          <div class="preview-label">工時</div>
+          <div class="preview-val"><span id="prev-hours">—</span></div>
+          <div class="preview-unit">小時</div>
+        </div>
+        <div>
+          <div class="preview-label">人均產值</div>
+          <div class="preview-val"><span id="prev-pp">—</span></div>
+          <div class="preview-unit">件 / 人</div>
+        </div>
+        <div>
+          <div class="preview-label">人時產</div>
+          <div class="preview-val"><span id="prev-pph">—</span></div>
+          <div class="preview-unit">件 / 人時</div>
+        </div>
       </div>
     </div>
-    <button class="btn btn-primary btn-full" id="submit-btn" onclick="submitRecord()"><i class="ti ti-device-floppy"></i> 儲存記錄</button>
+
+    <button class="btn btn-primary btn-full" id="submit-btn" onclick="submitRecord()">
+      <i class="ti ti-device-floppy"></i> 儲存記錄
+    </button>
   </div>
-  <div class="card">
-    <div class="card-title"><i class="ti ti-history"></i> 最近記錄</div>
+
+  <!-- Recent records -->
+  <div class="card card--flush">
+    <div style="padding:16px 20px 12px">
+      <div class="card-title"><i class="ti ti-history"></i>最近記錄</div>
+    </div>
     <div class="tbl-wrap">
       <table>
-        <thead><tr><th>機台</th><th>組長</th><th>類別</th><th>口味</th><th>人均</th><th>工時</th><th></th></tr></thead>
+        <thead>
+          <tr>
+            <th>機台</th><th>組長</th><th>類別</th><th>口味</th>
+            <th>人均</th><th>工時</th><th></th>
+          </tr>
+        </thead>
         <tbody id="recent-tbody"></tbody>
       </table>
     </div>
   </div>
-</div>
+</main>
 
 <!-- ===== 儀表板 ===== -->
-<div id="page-dashboard" class="page">
+<main id="page-dashboard" class="page" role="main">
+  <div class="page-header">
+    <h1>儀表板</h1>
+    <p>整體產值效率一覽</p>
+  </div>
+
   <div class="filter-bar">
     <select class="form-control" id="fil-category" onchange="updateDash()">
       <option value="">所有類別</option>
-      <option>獨享包</option><option>鐵盒</option><option>單片</option><option>漢餅</option><option>圓夢</option><option>月餅</option>
+      <option>獨享包</option><option>鐵盒</option><option>單片</option>
+      <option>漢餅</option><option>圓夢</option><option>月餅</option>
     </select>
     <select class="form-control" id="fil-leader" onchange="updateDash()"><option value="">所有組長</option></select>
     <select class="form-control" id="fil-machine" onchange="updateDash()"><option value="">所有機台</option></select>
   </div>
 
-  <div class="metrics-grid">
-    <div class="metric"><div class="metric-label">平均人均產值</div><div class="metric-value" id="m-avg">-</div><div class="metric-unit">件/人</div></div>
-    <div class="metric"><div class="metric-label">總記錄筆數</div><div class="metric-value" id="m-count">-</div><div class="metric-unit">筆</div></div>
-    <div class="metric"><div class="metric-label">平均每人時產</div><div class="metric-value" id="m-pph">-</div><div class="metric-unit">件/人時</div></div>
+  <div class="metrics-grid" role="group" aria-label="整體指標">
+    <div class="metric">
+      <div class="metric-label">平均人均</div>
+      <div class="metric-value" id="m-avg">—</div>
+      <div class="metric-unit">件 / 人</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">記錄筆數</div>
+      <div class="metric-value" id="m-count">—</div>
+      <div class="metric-unit">筆</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">人時產</div>
+      <div class="metric-value" id="m-pph">—</div>
+      <div class="metric-unit">件 / 人時</div>
+    </div>
   </div>
 
   <div id="dash-alerts"></div>
-
-  <!-- 各類別指標卡 -->
   <div id="cat-metrics-section"></div>
 
   <div class="card" id="suggestion-card" style="display:none">
-    <div class="card-title"><i class="ti ti-bulb"></i> 人員調配建議</div>
+    <div class="card-header">
+      <div class="card-title"><i class="ti ti-bulb"></i>人員調配建議</div>
+    </div>
     <div id="suggestion-list"></div>
+    <div class="suggestion-note">※ 建議僅供參考，實際調配請主管依現場狀況判斷</div>
   </div>
-  <div class="card">
-    <div class="card-title"><i class="ti ti-medal"></i> 機台排行（人均產值）</div>
-    <div id="rank-list"></div>
+
+  <div class="card card--flush">
+    <div style="padding:16px 20px 12px">
+      <div class="card-title"><i class="ti ti-medal"></i>機台排行</div>
+    </div>
+    <div style="padding:0 20px 8px" id="rank-list"></div>
   </div>
+
   <div class="card">
-    <div class="card-title"><i class="ti ti-users"></i> 組長績效比較</div>
+    <div class="card-header">
+      <div class="card-title"><i class="ti ti-users"></i>組長績效</div>
+    </div>
     <div class="chart-wrap" style="height:200px"><canvas id="leaderChart"></canvas></div>
   </div>
+
   <div class="card" id="reason-summary-card" style="display:none">
-    <div class="card-title"><i class="ti ti-alert-circle"></i> 異常記錄摘要</div>
+    <div class="card-header">
+      <div class="card-title"><i class="ti ti-alert-circle"></i>異常記錄摘要</div>
+    </div>
     <div id="reason-summary-list"></div>
   </div>
-  <div class="card">
-    <div class="card-title"><i class="ti ti-list-details"></i> 記錄明細</div>
+
+  <div class="card card--flush">
+    <div style="padding:16px 20px 12px">
+      <div class="card-title"><i class="ti ti-list-details"></i>記錄明細</div>
+    </div>
     <div class="tbl-wrap">
       <table>
-        <thead><tr><th>日期</th><th>機台</th><th>組長</th><th>類別</th><th>口味</th><th>人均</th><th>原因</th></tr></thead>
+        <thead>
+          <tr><th>日期</th><th>機台</th><th>組長</th><th>類別</th><th>口味</th><th>人均</th><th>原因</th></tr>
+        </thead>
         <tbody id="detail-tbody"></tbody>
       </table>
     </div>
   </div>
-</div>
+</main>
 
 <!-- ===== 趨勢 ===== -->
-<div id="page-trend" class="page">
-  <div class="date-pills">
-    <div class="pill active" onclick="setRange(this,7)">近7天</div>
-    <div class="pill" onclick="setRange(this,14)">近14天</div>
-    <div class="pill" onclick="setRange(this,30)">近30天</div>
+<main id="page-trend" class="page" role="main">
+  <div class="page-header">
+    <h1>趨勢分析</h1>
+    <p>時間序列與人力最佳化</p>
   </div>
+
+  <div class="date-pills" role="group" aria-label="時間範圍">
+    <div class="pill active" onclick="setRange(this,7)" role="button" tabindex="0">近7天</div>
+    <div class="pill" onclick="setRange(this,14)" role="button" tabindex="0">近14天</div>
+    <div class="pill" onclick="setRange(this,30)" role="button" tabindex="0">近30天</div>
+  </div>
+
   <div class="filter-bar">
     <select class="form-control" id="trend-fil-category" onchange="updateTrend()">
       <option value="">所有類別</option>
-      <option>獨享包</option><option>鐵盒</option><option>單片</option><option>漢餅</option><option>圓夢</option><option>月餅</option>
+      <option>獨享包</option><option>鐵盒</option><option>單片</option>
+      <option>漢餅</option><option>圓夢</option><option>月餅</option>
     </select>
     <select class="form-control" id="trend-fil-leader" onchange="updateTrend()"><option value="">所有組長</option></select>
     <select class="form-control" id="trend-fil-machine" onchange="updateTrend()"><option value="">所有機台</option></select>
   </div>
-  <button class="btn btn-primary btn-full" onclick="exportExcel()" style="margin-bottom:12px"><i class="ti ti-table-export"></i> 匯出 Excel（依目前篩選條件）</button>
+
+  <button class="btn btn-primary btn-full" onclick="exportExcel()" style="margin-bottom:16px">
+    <i class="ti ti-table-export"></i> 匯出 Excel
+  </button>
+
+  <!-- Scatter -->
   <div class="card">
-    <div class="card-title"><i class="ti ti-chart-dots"></i> 人數 vs 人均產值（找出最佳人數）</div>
-    <div style="font-size:12px;color:var(--text3);margin-bottom:8px">每個點代表一筆記錄。人均產值最高的那個人數，就是這條線的最佳配置。</div>
-    <div style="display:flex;gap:8px;margin-bottom:6px;flex-wrap:wrap">
-      <select class="form-control" id="scatter-machine" onchange="updateScatter()" style="flex:1;min-width:100px">
+    <div class="card-header">
+      <div class="card-title"><i class="ti ti-chart-dots"></i>人數 vs 人均產值</div>
+    </div>
+    <p style="font-size:12px;color:var(--ash);margin-bottom:12px;line-height:1.5">
+      每個點代表一筆記錄。人均最高的人數，即為最佳配置。
+    </p>
+    <div class="filter-bar four-col" style="margin-bottom:8px">
+      <select class="form-control" id="scatter-machine" onchange="updateScatter()">
         <option value="">所有機台</option>
       </select>
-      <select class="form-control" id="scatter-category" onchange="onScatterCategoryChange()" style="flex:1;min-width:100px">
+      <select class="form-control" id="scatter-category" onchange="onScatterCategoryChange()">
         <option value="">所有類別</option>
-        <option>獨享包</option><option>鐵盒</option><option>單片</option><option>漢餅</option><option>圓夢</option><option>月餅</option>
+        <option>獨享包</option><option>鐵盒</option><option>單片</option>
+        <option>漢餅</option><option>圓夢</option><option>月餅</option>
       </select>
     </div>
-    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
-      <select class="form-control" id="scatter-flavor" onchange="updateScatter()" style="flex:1;min-width:100px">
+    <div style="margin-bottom:12px">
+      <select class="form-control" id="scatter-flavor" onchange="updateScatter()">
         <option value="">所有口味</option>
       </select>
     </div>
-    <div id="scatter-insight" style="display:none;background:var(--green-bg);border-radius:var(--radius);padding:8px 12px;margin-bottom:10px;font-size:12px;color:var(--green-text)"></div>
-    <div class="chart-wrap" style="height:260px"><canvas id="scatterChart" role="img" aria-label="人數vs人均產值散點圖，顯示不同人數配置下的效率差異"></canvas></div>
-    <div id="scatter-legend" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:12px;color:var(--text2)"></div>
+    <div class="scatter-insight" id="scatter-insight"></div>
+    <div class="chart-wrap" style="height:260px">
+      <canvas id="scatterChart" role="img" aria-label="人數vs人均產值散點圖"></canvas>
+    </div>
+    <div class="scatter-legend" id="scatter-legend"></div>
   </div>
+
   <div class="card">
-    <div class="card-title"><i class="ti ti-trending-up"></i> 人均產值趨勢</div>
+    <div class="card-header">
+      <div class="card-title"><i class="ti ti-trending-up"></i>人均產值趨勢</div>
+    </div>
     <div class="chart-wrap" style="height:220px"><canvas id="trendChart"></canvas></div>
   </div>
+
   <div class="card">
-    <div class="card-title"><i class="ti ti-clock-hour4"></i> 每人時產趨勢</div>
+    <div class="card-header">
+      <div class="card-title"><i class="ti ti-clock-hour4"></i>每人時產趨勢</div>
+    </div>
     <div class="chart-wrap" style="height:200px"><canvas id="pphChart"></canvas></div>
   </div>
+
   <div class="card">
-    <div class="card-title"><i class="ti ti-users"></i> 各組長每日人均</div>
-    <div id="trend-legend" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;font-size:12px"></div>
+    <div class="card-header">
+      <div class="card-title"><i class="ti ti-users"></i>各組長每日人均</div>
+    </div>
+    <div class="trend-legend" id="trend-legend"></div>
     <div class="chart-wrap" style="height:220px"><canvas id="leaderTrendChart"></canvas></div>
   </div>
-</div>
+</main>
 
 <!-- ===== 設定 ===== -->
-<div id="page-admin" class="page">
+<main id="page-admin" class="page" role="main">
+  <div class="page-header">
+    <h1>設定</h1>
+    <p>管理機台、組長與產品口味</p>
+  </div>
+
   <div class="card">
-    <div class="card-title"><i class="ti ti-cpu"></i> 機台管理</div>
+    <div class="card-header">
+      <div class="card-title"><i class="ti ti-cpu"></i>機台</div>
+    </div>
     <div class="admin-list" id="admin-machines"></div>
     <div class="admin-add-row">
       <input type="text" class="form-control" id="new-machine" placeholder="新增機台名稱">
       <button class="btn btn-primary" onclick="addItem('machine')"><i class="ti ti-plus"></i></button>
     </div>
   </div>
+
   <div class="card">
-    <div class="card-title"><i class="ti ti-user-check"></i> 組長管理</div>
+    <div class="card-header">
+      <div class="card-title"><i class="ti ti-user-check"></i>組長</div>
+    </div>
     <div class="admin-list" id="admin-leaders"></div>
     <div class="admin-add-row">
       <input type="text" class="form-control" id="new-leader" placeholder="新增組長姓名">
       <button class="btn btn-primary" onclick="addItem('leader')"><i class="ti ti-plus"></i></button>
     </div>
   </div>
+
   <div class="card">
-    <div class="card-title"><i class="ti ti-ice-cream"></i> 各類別口味管理</div>
-    <p style="font-size:12px;color:var(--text3);margin-bottom:12px">點開各類別後可新增或刪除口味</p>
+    <div class="card-header">
+      <div class="card-title"><i class="ti ti-ice-cream"></i>口味管理</div>
+    </div>
+    <p style="font-size:12px;color:var(--ash);margin-bottom:12px">點開類別後可新增或刪除口味</p>
     <div id="admin-flavors"></div>
   </div>
-  <div class="card" style="border-color:#f0997b">
-    <div class="card-title" style="color:var(--red-text)"><i class="ti ti-trash"></i> 危險操作</div>
-    <p style="font-size:13px;color:var(--text2);margin-bottom:10px">清除所有產值記錄，設定資料不受影響。</p>
-    <button class="btn btn-danger" onclick="clearRecords()"><i class="ti ti-trash"></i> 清除所有記錄</button>
-  </div>
-</div>
 
+  <div class="danger-card">
+    <div class="danger-title"><i class="ti ti-trash"></i>危險操作</div>
+    <p class="danger-desc">清除所有產值記錄，設定資料不受影響。此動作無法復原。</p>
+    <button class="btn btn-danger" onclick="clearRecords()">
+      <i class="ti ti-trash"></i> 清除所有記錄
+    </button>
+  </div>
+</main>
 
 <!-- ===== 記錄管理 ===== -->
-<div id="page-logs" class="page">
-  <div class="filter-bar" style="margin-bottom:8px">
-    <select class="form-control" id="log-fil-category" onchange="renderLogs()">
-      <option value="">所有類別</option>
-      <option>獨享包</option><option>鐵盒</option><option>單片</option><option>漢餅</option><option>圓夢</option><option>月餅</option>
-    </select>
-    <select class="form-control" id="log-fil-leader" onchange="renderLogs()"><option value="">所有組長</option></select>
-    <select class="form-control" id="log-fil-machine" onchange="renderLogs()"><option value="">所有機台</option></select>
+<main id="page-logs" class="page" role="main">
+  <div class="page-header">
+    <h1>記錄管理</h1>
+    <p>查閱、篩選與刪除歷史記錄</p>
   </div>
-  <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
-    <input type="date" class="form-control" id="log-date-from" onchange="renderLogs()" style="flex:1">
-    <span style="color:var(--text3);font-size:13px">至</span>
-    <input type="date" class="form-control" id="log-date-to" onchange="renderLogs()" style="flex:1">
+
+  <div class="log-filter-area">
+    <div class="filter-bar">
+      <select class="form-control" id="log-fil-category" onchange="renderLogs()">
+        <option value="">所有類別</option>
+        <option>獨享包</option><option>鐵盒</option><option>單片</option>
+        <option>漢餅</option><option>圓夢</option><option>月餅</option>
+      </select>
+      <select class="form-control" id="log-fil-leader" onchange="renderLogs()"><option value="">所有組長</option></select>
+      <select class="form-control" id="log-fil-machine" onchange="renderLogs()"><option value="">所有機台</option></select>
+    </div>
+    <div class="log-date-row">
+      <input type="date" class="form-control" id="log-date-from" onchange="renderLogs()">
+      <span style="color:var(--ash);font-size:13px;flex-shrink:0">至</span>
+      <input type="date" class="form-control" id="log-date-to" onchange="renderLogs()">
+    </div>
   </div>
-  <div id="log-count" style="font-size:12px;color:var(--text3);margin-bottom:8px"></div>
-  <div class="card" style="padding:0;overflow:hidden">
+
+  <div class="log-count-bar" id="log-count"></div>
+
+  <div class="card card--flush">
     <div class="tbl-wrap">
       <table>
-        <thead><tr><th>日期</th><th>機台</th><th>組長</th><th>類別</th><th>口味</th><th>人數</th><th>產量</th><th>人均</th><th></th></tr></thead>
+        <thead>
+          <tr>
+            <th>日期</th><th>機台</th><th>組長</th><th>類別</th>
+            <th>口味</th><th>人數</th><th>產量</th><th>人均</th><th></th>
+          </tr>
+        </thead>
         <tbody id="log-tbody"></tbody>
       </table>
     </div>
   </div>
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px">
-    <button class="btn btn-sm" id="log-prev" onclick="logPage(-1)"><i class="ti ti-chevron-left"></i> 上一頁</button>
-    <span id="log-page-info" style="font-size:13px;color:var(--text2)"></span>
-    <button class="btn btn-sm" id="log-next" onclick="logPage(1)">下一頁 <i class="ti ti-chevron-right"></i></button>
-  </div>
-</div>
 
-<div class="toast" id="toast"></div>
+  <div class="pagination">
+    <button class="btn btn-sm" id="log-prev" onclick="logPage(-1)">
+      <i class="ti ti-chevron-left"></i> 上一頁
+    </button>
+    <span class="page-info" id="log-page-info"></span>
+    <button class="btn btn-sm" id="log-next" onclick="logPage(1)">
+      下一頁 <i class="ti ti-chevron-right"></i>
+    </button>
+  </div>
+</main>
+
+<div class="toast" id="toast" role="alert" aria-live="assertive"></div>
 
 <script>
 const SB_URL='https://hqtlkdhtdwgrusvmqymm.supabase.co';
@@ -388,12 +1065,12 @@ const sbFetch=(path,opts={})=>fetch(SB_URL+'/rest/v1/'+path,{
 
 let state={machines:[],leaders:[],flavors:{獨享包:[],鐵盒:[],單片:[],漢餅:[],圓夢:[],月餅:[]},records:[]};
 
-// SYNC UI
-function setSyncing(){document.getElementById('sync-dot').className='sync-dot syncing';document.getElementById('sync-label').textContent='同步中...';}
+// ── SYNC UI ──
+function setSyncing(){document.getElementById('sync-dot').className='sync-dot syncing';document.getElementById('sync-label').textContent='同步中';}
 function setSynced(){document.getElementById('sync-dot').className='sync-dot';document.getElementById('sync-label').textContent='已同步';}
 function setSyncError(){document.getElementById('sync-dot').className='sync-dot error';document.getElementById('sync-label').textContent='連線錯誤';}
 
-// API
+// ── API ──
 async function loadSettings(){
   const r=await sbFetch('settings?select=key,value');
   if(!r.ok) throw new Error('載入設定失敗');
@@ -453,14 +1130,19 @@ async function deleteAllRecords(){
   setSynced();
 }
 
-// UTIL
+// ── UTIL ──
 function calcHours(s,e){if(!s||!e)return 0;const d=(new Date(e)-new Date(s))/3600000;return d>0?d:0;}
 function calcPP(r){return r.workers>0?Math.round(r.output/r.workers):0;}
 function calcPPH(r){const h=calcHours(r.start,r.end);if(!h||!r.workers)return 0;return Math.round(r.output/(r.workers*h)*10)/10;}
 function fmtDate(dt){return dt?dt.split('T')[0]:'';}
-function toast(msg,dur=2400){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur);}
 
-// POPULATE SELECTS (machines, leaders only — category/flavor handled separately)
+function toast(msg,dur=2400){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),dur);
+}
+
+// ── SELECTS ──
 function populateSelects(){
   [['f-machine','fil-machine','trend-fil-machine'],['f-leader','fil-leader','trend-fil-leader']].forEach(([fId,dId,tId],ki)=>{
     const arr=ki===0?state.machines:state.leaders;
@@ -475,11 +1157,11 @@ function populateSelects(){
   });
 }
 
-// CATEGORY → FLAVOR cascade
+// ── CATEGORY → FLAVOR cascade ──
 function onCategoryChange(){
   const cat=document.getElementById('f-category').value;
   const flavorSel=document.getElementById('f-flavor');
-  if(!cat){flavorSel.innerHTML='<option value="">— 先選類別 —</option>';flavorSel.disabled=true;return;}
+  if(!cat){flavorSel.innerHTML='<option value="">先選類別</option>';flavorSel.disabled=true;return;}
   const flavors=state.flavors[cat]||[];
   flavorSel.innerHTML='<option value="">— 選擇口味 —</option>'+flavors.map(f=>`<option value="${f}">${f}</option>`).join('');
   flavorSel.disabled=false;
@@ -490,7 +1172,7 @@ function onReasonChange(){
   document.getElementById('f-reason-note').style.display=(v&&v!=='— 無異常 —')?'block':'none';
 }
 
-// RECORD PAGE
+// ── RECORD PAGE ──
 function initDefaultTimes(){
   const now=new Date();const pad=n=>String(n).padStart(2,'0');
   const fmt=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
@@ -509,9 +1191,9 @@ function updatePreview(){
     document.getElementById('prev-hours').textContent=Math.round(h*10)/10;
     document.getElementById('prev-pp').textContent=Math.round(o/w);
     document.getElementById('prev-pph').textContent=Math.round(o/(w*h)*10)/10;
-    box.style.display='block';return;
+    box.classList.add('show');return;
   }}
-  box.style.display='none';
+  box.classList.remove('show');
 }
 ['f-workers','f-output','f-start','f-end'].forEach(id=>{
   document.getElementById(id).addEventListener('input',updatePreview);
@@ -532,7 +1214,7 @@ async function submitRecord(){
   if(!machine||!leader||!workers||!output||!category||!flavor||!start||!end){toast('⚠ 請填寫所有欄位');return;}
   if(new Date(end)<=new Date(start)){toast('⚠ 結束時間需晚於開始時間');return;}
   const btn=document.getElementById('submit-btn');
-  btn.disabled=true;btn.textContent='儲存中...';
+  btn.disabled=true;btn.innerHTML='<i class="ti ti-loader"></i> 儲存中…';
   try{
     const rec=await insertRecord({machine,leader,workers,output,category,flavor,start,end,date:fmtDate(start),reason,reasonNote});
     state.records.unshift(rec);
@@ -544,7 +1226,7 @@ async function submitRecord(){
     document.getElementById('f-reason').value='';
     document.getElementById('f-reason-note').value='';
     document.getElementById('f-reason-note').style.display='none';
-    document.getElementById('preview-box').style.display='none';
+    document.getElementById('preview-box').classList.remove('show');
     toast('✓ 已儲存！人均產值 '+calcPP(rec)+' 件/人');
   }catch(e){toast('⚠ 儲存失敗：'+e.message);}
   btn.disabled=false;btn.innerHTML='<i class="ti ti-device-floppy"></i> 儲存記錄';
@@ -553,16 +1235,27 @@ async function submitRecord(){
 function renderRecentTable(){
   const tbody=document.getElementById('recent-tbody');
   const recent=state.records.slice(0,8);
-  if(!recent.length){tbody.innerHTML='<tr><td colspan="7" style="color:var(--text3);text-align:center;padding:16px">尚無記錄</td></tr>';return;}
+  if(!recent.length){
+    tbody.innerHTML=`<tr><td colspan="7"><div class="empty"><i class="ti ti-clipboard-off"></i>尚無記錄</div></td></tr>`;
+    return;
+  }
   tbody.innerHTML=recent.map(r=>{
     const h=Math.round(calcHours(r.start,r.end)*10)/10;
     const bc=CAT_BADGE[r.category]||'badge-blue';
-    return`<tr><td>${r.machine}</td><td>${r.leader}</td><td><span class="badge ${bc}">${r.category}</span></td><td style="color:var(--text2)">${r.flavor}</td><td style="font-weight:500">${calcPP(r)}</td><td style="color:var(--text2)">${h}h</td><td><button class="btn btn-danger btn-sm" data-id="${r.id}"><i class="ti ti-trash"></i></button></td></tr>`;
+    return`<tr>
+      <td>${r.machine}</td>
+      <td class="muted">${r.leader}</td>
+      <td><span class="badge ${bc}">${r.category}</span></td>
+      <td class="muted" style="max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.flavor}</td>
+      <td class="num">${calcPP(r)}</td>
+      <td class="muted">${h}h</td>
+      <td><button class="btn btn-ghost btn-sm" data-id="${r.id}" aria-label="刪除記錄"><i class="ti ti-trash" style="color:var(--red)"></i></button></td>
+    </tr>`;
   }).join('');
   tbody.querySelectorAll('button[data-id]').forEach(btn=>btn.addEventListener('click',()=>deleteRecord(parseInt(btn.dataset.id))));
 }
 
-// DASHBOARD
+// ── DASHBOARD ──
 let lChart=null;
 function destroyChart(c){if(c)c.destroy();return null;}
 
@@ -576,8 +1269,8 @@ function getFiltered(catId,leadId,machId){
 function updateDash(){
   const recs=getFiltered('fil-category','fil-leader','fil-machine');
   if(!recs.length){
-    ['m-avg','m-count','m-pph'].forEach(id=>document.getElementById(id).textContent='-');
-    document.getElementById('rank-list').innerHTML='<p style="color:var(--text3);font-size:13px;text-align:center;padding:16px">無資料</p>';
+    ['m-avg','m-count','m-pph'].forEach(id=>document.getElementById(id).textContent='—');
+    document.getElementById('rank-list').innerHTML='<div class="empty"><i class="ti ti-database-off"></i>無資料</div>';
     document.getElementById('detail-tbody').innerHTML='';
     document.getElementById('dash-alerts').innerHTML='';
     document.getElementById('cat-metrics-section').innerHTML='';
@@ -589,7 +1282,7 @@ function updateDash(){
   document.getElementById('m-count').textContent=recs.length;
   document.getElementById('m-pph').textContent=Math.round(recs.reduce((a,r)=>a+calcPPH(r),0)/recs.length*10)/10;
 
-  // 各類別指標卡（只在「所有類別」時顯示）
+  // 各類別指標卡
   const catFilter=document.getElementById('fil-category').value;
   const catSection=document.getElementById('cat-metrics-section');
   if(!catFilter){
@@ -599,67 +1292,75 @@ function updateDash(){
       const pp=Math.round(cr.reduce((a,r)=>a+calcPP(r),0)/cr.length);
       const pph=Math.round(cr.reduce((a,r)=>a+calcPPH(r),0)/cr.length*10)/10;
       const col=CAT_COLORS[cat];
-      return`<div style="flex:1;min-width:120px;background:var(--surface);border:1px solid var(--border);border-top:3px solid ${col};border-radius:var(--radius);padding:12px">
-        <div style="font-size:12px;color:var(--text2);margin-bottom:4px">${cat}</div>
-        <div style="font-size:20px;font-weight:500">${pp}</div>
-        <div style="font-size:11px;color:var(--text3)">件/人 ｜ ${pph} 件/人時 ｜ ${cr.length}筆</div>
+      return`<div class="cat-metric-card" style="--cat-color:${col}">
+        <div class="cat-metric-name">${cat}</div>
+        <div class="cat-metric-val">${pp}</div>
+        <div class="cat-metric-sub">${pph} 件/人時 · ${cr.length} 筆</div>
       </div>`;
     }).filter(Boolean);
-    catSection.innerHTML=catCards.length?`<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">${catCards.join('')}</div>`:'';
+    catSection.innerHTML=catCards.length?`<div class="cat-metrics-grid">${catCards.join('')}</div>`:'';
   } else {
     catSection.innerHTML='';
   }
 
-  // Machine rank — 各類別各自算平均再標警示
+  // Machine rank
   const byM={};
   recs.forEach(r=>{if(!byM[r.machine])byM[r.machine]=[];byM[r.machine].push(r);});
 
-  // 計算各類別平均（用來做類別內比較）
   const catAvgMap={};
   CATEGORIES.forEach(cat=>{
     const cr=recs.filter(r=>r.category===cat);
     catAvgMap[cat]=cr.length?Math.round(cr.reduce((a,r)=>a+calcPP(r),0)/cr.length):0;
   });
 
-  // 每個機台：找出它主要的類別，用該類別的平均來判斷偏低
   const mArr=Object.entries(byM).map(([k,v])=>{
     const pp=Math.round(v.reduce((a,r)=>a+calcPP(r),0)/v.length);
-    // 找這台機台最多的類別
     const catCount={};v.forEach(r=>{catCount[r.category]=(catCount[r.category]||0)+1;});
     const mainCat=Object.entries(catCount).sort((a,b)=>b[1]-a[1])[0]?.[0]||'';
     const catAvg=catAvgMap[mainCat]||avgPP;
     const low=pp<catAvg*0.85;
-    return{name:k,val:pp,mainCat,catAvg,low};
+    return{name:k,val:pp,mainCat,catAvg,low,workers:v[v.length-1]?.workers||0};
   }).sort((a,b)=>b.val-a.val);
 
   const maxV=mArr[0]?.val||1;
   const lowMs=mArr.filter(m=>m.low);
 
-  // 警示（類別各自比較）
+  // Alerts
   let alertHtml='';
   if(lowMs.length){
-    const catFilter=document.getElementById('fil-category').value;
-    if(catFilter){
-      // 已篩選類別，直接顯示
+    const catFilterVal=document.getElementById('fil-category').value;
+    if(catFilterVal){
       alertHtml=`<div class="alert alert-warn"><i class="ti ti-alert-triangle"></i><div><strong>效率偏低提醒</strong><br>${lowMs.map(m=>m.name+'（'+m.val+' 件/人，'+m.mainCat+'平均 '+m.catAvg+'）').join('、')} 低於該類別平均 85%</div></div>`;
     } else {
-      // 混合類別，分組顯示
       const byCat={};
       lowMs.forEach(m=>{if(!byCat[m.mainCat])byCat[m.mainCat]=[];byCat[m.mainCat].push(m);});
-      const lines=Object.entries(byCat).map(([cat,ms])=>`【${cat}】${ms.map(m=>m.name+'（'+m.val+' 件/人）').join('、')} 低於該類別平均 ${catAvgMap[cat]} 的 85%`).join('<br>');
-      alertHtml=`<div class="alert alert-warn"><i class="ti ti-alert-triangle"></i><div><strong>效率偏低提醒（依類別比較）</strong><br>${lines}</div></div>`;
+      const lines=Object.entries(byCat).map(([cat,ms])=>`【${cat}】${ms.map(m=>m.name+'（'+m.val+' 件/人）').join('、')} 低於類別平均 ${catAvgMap[cat]} 的 85%`).join('<br>');
+      alertHtml=`<div class="alert alert-warn"><i class="ti ti-alert-triangle"></i><div><strong>效率偏低提醒</strong><br>${lines}</div></div>`;
     }
   }
   document.getElementById('dash-alerts').innerHTML=alertHtml;
 
-  // 排行
+  // Rank list
   document.getElementById('rank-list').innerHTML=mArr.map((m,i)=>{
     const pct=Math.round(m.val/maxV*100);
-    const catTag=m.mainCat?`<span class="badge badge-blue" style="font-size:10px">${m.mainCat}</span>`:'';
-    return`<div class="rank-item"><div class="rank-num">${i+1}</div><div class="rank-info"><div class="rank-name">${m.name}${catTag}<span class="badge ${m.low?'badge-red':'badge-green'}">${m.low?'偏低':'正常'}</span></div><div class="rank-bar-bg"><div class="rank-bar" style="width:${pct}%;background:${m.low?'var(--red)':'var(--green)'}"></div></div></div><div class="rank-val">${m.val} <span style="font-size:10px;color:var(--text3)">件/人</span></div></div>`;
+    const col=CAT_COLORS[m.mainCat]||'var(--sage)';
+    return`<div class="rank-item">
+      <div class="rank-num ${i<3?'top':''}">${i+1}</div>
+      <div class="rank-info">
+        <div class="rank-name">
+          ${m.name}
+          ${m.mainCat?`<span class="badge ${CAT_BADGE[m.mainCat]||'badge-blue'}" style="font-size:9px">${m.mainCat}</span>`:''}
+          <span class="${m.low?'badge badge-low':'badge badge-ok'}">${m.low?'偏低':'正常'}</span>
+        </div>
+        <div class="rank-bar-bg">
+          <div class="rank-bar" style="width:${pct}%;background:${m.low?'var(--red)':col}"></div>
+        </div>
+      </div>
+      <div class="rank-val">${m.val}<div class="rank-val-unit">件/人</div></div>
+    </div>`;
   }).join('');
 
-  // 人員調配建議
+  // 調配建議
   const suggCard=document.getElementById('suggestion-card');
   const suggList=document.getElementById('suggestion-list');
   if(lowMs.length&&mArr.length>=2){
@@ -667,21 +1368,20 @@ function updateDash(){
     const suggestions=lowMs.slice(0,3).map(low=>{
       const best=topMs.find(t=>t.mainCat===low.mainCat)||topMs[0];
       if(!best)return'';
-      const gap=best.val-low.val;
       const suggestMove=Math.max(1,Math.round(low.workers*0.2)||1);
-      return`<div style="padding:10px 0;border-bottom:1px solid var(--border)">
-        <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:4px">
-          <i class="ti ti-arrow-right" style="color:var(--green)"></i>
-          建議從 <strong>${best.name}</strong> 調 ${suggestMove} 人 → <strong>${low.name}</strong>
+      return`<div class="suggestion-item">
+        <div class="suggestion-arrow">
+          <i class="ti ti-arrow-right"></i>
+          從 ${best.name} 調 ${suggestMove} 人 → ${low.name}
         </div>
-        <div style="font-size:12px;color:var(--text2)">${low.name} 人均 ${low.val} 件/人，低於${low.mainCat?low.mainCat+'類別':''} 平均 ${low.catAvg} 件/人，差距 ${low.catAvg-low.val} 件/人</div>
+        <div class="suggestion-detail">${low.name} 人均 ${low.val} 件/人，低於${low.mainCat?low.mainCat+'類別':''} 平均 ${low.catAvg} 件/人</div>
       </div>`;
     }).filter(Boolean);
     if(suggestions.length){
       suggCard.style.display='block';
-      suggList.innerHTML=suggestions.join('')+'<div style="font-size:11px;color:var(--text3);padding-top:8px">※ 建議僅供參考，實際調配請主管依現場狀況判斷</div>';
-    } else { suggCard.style.display='none'; }
-  } else { suggCard.style.display='none'; }
+      suggList.innerHTML=suggestions.join('');
+    } else {suggCard.style.display='none';}
+  } else {suggCard.style.display='none';}
 
   // Leader chart
   const byL={};
@@ -690,7 +1390,11 @@ function updateDash(){
   const lVals=lNames.map(l=>Math.round(byL[l].reduce((a,b)=>a+b,0)/byL[l].length));
   const lColors=['#1D9E75','#378ADD','#D85A30','#BA7517','#7F77DD'];
   lChart=destroyChart(lChart);
-  lChart=new Chart(document.getElementById('leaderChart'),{type:'bar',data:{labels:lNames,datasets:[{label:'人均產值',data:lVals,backgroundColor:lNames.map((_,i)=>lColors[i%lColors.length]),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{font:{size:11}},grid:{color:'rgba(128,128,128,0.1)'}},x:{ticks:{font:{size:12}},grid:{display:false}}}}});
+  lChart=new Chart(document.getElementById('leaderChart'),{
+    type:'bar',
+    data:{labels:lNames,datasets:[{label:'人均產值',data:lVals,backgroundColor:lNames.map((_,i)=>lColors[i%lColors.length]+'CC'),borderRadius:3,borderSkipped:false}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.raw} 件/人`}}},scales:{y:{beginAtZero:true,ticks:{font:{size:11},color:'#8A9992'},grid:{color:'rgba(0,0,0,0.04)'}},x:{ticks:{font:{size:12,weight:'500'},color:'#0F1A16'},grid:{display:false}}}}
+  });
 
   // Detail table
   document.getElementById('detail-tbody').innerHTML=recs.slice(0,20).map(r=>{
@@ -698,11 +1402,19 @@ function updateDash(){
     const bc=CAT_BADGE[r.category]||'badge-blue';
     const mainCat=r.category;const catAvg=catAvgMap[mainCat]||avgPP;
     const low=pp<catAvg*0.85;
-    const reasonTag=r.reason?`<span class="badge badge-red" style="font-size:10px">${r.reason}</span>`:'';
-    return`<tr><td style="color:var(--text2)">${r.date}</td><td>${r.machine}</td><td>${r.leader}</td><td><span class="badge ${bc}">${r.category}</span></td><td style="color:var(--text2)">${r.flavor}</td><td style="font-weight:500;color:${low?'var(--red-text)':'inherit'}">${pp}</td><td>${reasonTag}${r.reasonNote?'<span style="font-size:11px;color:var(--text2);margin-left:4px">'+r.reasonNote+'</span>':''}</td></tr>`;
+    const reasonTag=r.reason?`<span class="badge badge-red" style="font-size:9px">${r.reason}</span>`:'';
+    return`<tr>
+      <td class="muted" style="white-space:nowrap">${r.date}</td>
+      <td>${r.machine}</td>
+      <td class="muted">${r.leader}</td>
+      <td><span class="badge ${bc}">${r.category}</span></td>
+      <td class="muted">${r.flavor}</td>
+      <td class="num" style="color:${low?'var(--red)':'inherit'}">${pp}</td>
+      <td>${reasonTag}${r.reasonNote?`<span style="font-size:10px;color:var(--ash);margin-left:4px">${r.reasonNote}</span>`:''}</td>
+    </tr>`;
   }).join('');
 
-  // 異常原因摘要
+  // Reason summary
   const reasonRecs=recs.filter(r=>r.reason);
   const rsCard=document.getElementById('reason-summary-card');
   const rsList=document.getElementById('reason-summary-list');
@@ -711,17 +1423,17 @@ function updateDash(){
     reasonRecs.forEach(r=>{if(!byReason[r.reason])byReason[r.reason]=[];byReason[r.reason].push(r);});
     rsCard.style.display='block';
     rsList.innerHTML=Object.entries(byReason).map(([reason,rs])=>`
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div class="reason-row">
         <div>
           <span class="badge badge-red">${reason}</span>
-          <span style="font-size:12px;color:var(--text2);margin-left:8px">${rs.map(r=>r.machine).filter((v,i,a)=>a.indexOf(v)===i).join('、')}</span>
+          <div class="reason-machines">${rs.map(r=>r.machine).filter((v,i,a)=>a.indexOf(v)===i).join('、')}</div>
         </div>
-        <span style="font-size:13px;font-weight:500;color:var(--text3)">${rs.length} 筆</span>
-      </div>`).join('')+'<div style="font-size:11px;color:var(--text3);padding-top:6px">共 '+reasonRecs.length+' 筆記錄標記異常原因</div>';
+        <div class="reason-count">${rs.length} 筆</div>
+      </div>`).join('')+`<div style="font-size:10px;color:var(--ash-light);padding-top:8px">共 ${reasonRecs.length} 筆記錄標記異常原因</div>`;
   } else { rsCard.style.display='none'; }
 }
 
-// TREND
+// ── TREND ──
 let trendRange=7,tChart=null,pphC=null,ltChart=null;
 function setRange(el,r){document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));el.classList.add('active');trendRange=r;updateTrend();}
 
@@ -743,160 +1455,95 @@ function updateTrend(){
   const ppV=dates.map(d=>{const a=byDate[d];return a.length?Math.round(a.reduce((s,r)=>s+calcPP(r),0)/a.length):null;});
   const pphV=dates.map(d=>{const a=byDate[d];return a.length?Math.round(a.reduce((s,r)=>s+calcPPH(r),0)/a.length*10)/10:null;});
 
+  const chartOpts=(color)=>({responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.raw}`}}},scales:{y:{beginAtZero:false,ticks:{font:{size:11},color:'#8A9992'},grid:{color:'rgba(0,0,0,0.04)'}},x:{ticks:{font:{size:11},color:'#8A9992'},grid:{display:false}}}});
+
   tChart=destroyChart(tChart);
-  tChart=new Chart(document.getElementById('trendChart'),{type:'line',data:{labels:lbls,datasets:[{label:'人均產值',data:ppV,borderColor:'#1D9E75',backgroundColor:'rgba(29,158,117,0.08)',tension:0.3,fill:true,pointRadius:3,spanGaps:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:false,ticks:{font:{size:11}}},x:{ticks:{font:{size:11}},grid:{display:false}}}}});
+  tChart=new Chart(document.getElementById('trendChart'),{type:'line',data:{labels:lbls,datasets:[{label:'人均產值',data:ppV,borderColor:'#0D6B55',backgroundColor:'rgba(13,107,85,0.06)',tension:0.35,fill:true,pointRadius:4,pointBackgroundColor:'#0D6B55',spanGaps:true}]},options:chartOpts('#0D6B55')});
+
   pphC=destroyChart(pphC);
-  pphC=new Chart(document.getElementById('pphChart'),{type:'line',data:{labels:lbls,datasets:[{label:'每人時產',data:pphV,borderColor:'#378ADD',backgroundColor:'rgba(55,138,221,0.08)',tension:0.3,fill:true,pointRadius:3,spanGaps:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:false,ticks:{font:{size:11}}},x:{ticks:{font:{size:11}},grid:{display:false}}}}});
+  pphC=new Chart(document.getElementById('pphChart'),{type:'line',data:{labels:lbls,datasets:[{label:'每人時產',data:pphV,borderColor:'#378ADD',backgroundColor:'rgba(55,138,221,0.06)',tension:0.35,fill:true,pointRadius:4,pointBackgroundColor:'#378ADD',spanGaps:true}]},options:chartOpts('#378ADD')});
 
   const lColors=['#1D9E75','#378ADD','#D85A30','#BA7517','#7F77DD'];
   const leaders=[...new Set(recs.map(r=>r.leader))];
-  const datasets=leaders.map((l,i)=>({label:l,borderColor:lColors[i%lColors.length],backgroundColor:'transparent',tension:0.3,pointRadius:3,spanGaps:true,data:dates.map(d=>{const a=recs.filter(r=>r.date===d&&r.leader===l);return a.length?Math.round(a.reduce((s,r)=>s+calcPP(r),0)/a.length):null;})}));
-  document.getElementById('trend-legend').innerHTML=leaders.map((l,i)=>`<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:${lColors[i%lColors.length]}"></span>${l}</span>`).join('');
+  const datasets=leaders.map((l,i)=>({label:l,borderColor:lColors[i%lColors.length],backgroundColor:'transparent',tension:0.35,pointRadius:4,pointBackgroundColor:lColors[i%lColors.length],spanGaps:true,data:dates.map(d=>{const a=recs.filter(r=>r.date===d&&r.leader===l);return a.length?Math.round(a.reduce((s,r)=>s+calcPP(r),0)/a.length):null;})}));
+
+  document.getElementById('trend-legend').innerHTML=leaders.map((l,i)=>`<div class="legend-item"><div class="legend-dot" style="background:${lColors[i%lColors.length]}"></div>${l}</div>`).join('');
   ltChart=destroyChart(ltChart);
-  ltChart=new Chart(document.getElementById('leaderTrendChart'),{type:'line',data:{labels:lbls,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:false,ticks:{font:{size:11}}},x:{ticks:{font:{size:11}},grid:{display:false}}}}});
+  ltChart=new Chart(document.getElementById('leaderTrendChart'),{type:'line',data:{labels:lbls,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:false,ticks:{font:{size:11},color:'#8A9992'},grid:{color:'rgba(0,0,0,0.04)'}},x:{ticks:{font:{size:11},color:'#8A9992'},grid:{display:false}}}}});
 }
 
-
-
-// SCATTER CHART
-let scatterChart = null;
-const SCATTER_COLORS = ['#1D9E75','#378ADD','#D85A30','#BA7517','#7F77DD','#E87BA4'];
+// ── SCATTER ──
+let scatterChart=null;
+const SCATTER_COLORS=['#1D9E75','#378ADD','#D85A30','#BA7517','#7F77DD','#E87BA4'];
 
 function populateScatterMachines(){
-  const sel = document.getElementById('scatter-machine');
-  if(!sel) return;
-  const cur = sel.value;
-  sel.innerHTML = '<option value="">所有機台</option>' + state.machines.map(m=>`<option value="${m}">${m}</option>`).join('');
-  if(state.machines.includes(cur)) sel.value = cur;
-  // reset flavor
-  const flSel = document.getElementById('scatter-flavor');
-  if(flSel) flSel.innerHTML = '<option value="">所有口味</option>';
+  const sel=document.getElementById('scatter-machine');if(!sel)return;
+  const cur=sel.value;
+  sel.innerHTML='<option value="">所有機台</option>'+state.machines.map(m=>`<option value="${m}">${m}</option>`).join('');
+  if(state.machines.includes(cur))sel.value=cur;
+  const flSel=document.getElementById('scatter-flavor');
+  if(flSel)flSel.innerHTML='<option value="">所有口味</option>';
 }
 
 function onScatterCategoryChange(){
-  const cat = document.getElementById('scatter-category').value;
-  const flSel = document.getElementById('scatter-flavor');
-  const flavors = cat ? (state.flavors[cat] || []) : [];
-  flSel.innerHTML = '<option value="">所有口味</option>' + flavors.map(f=>`<option value="${f}">${f}</option>`).join('');
+  const cat=document.getElementById('scatter-category').value;
+  const flSel=document.getElementById('scatter-flavor');
+  const flavors=cat?(state.flavors[cat]||[]):[];
+  flSel.innerHTML='<option value="">所有口味</option>'+flavors.map(f=>`<option value="${f}">${f}</option>`).join('');
   updateScatter();
 }
 
 function updateScatter(){
-  const fm = document.getElementById('scatter-machine').value;
-  const fc = document.getElementById('scatter-category').value;
-  const ff = document.getElementById('scatter-flavor').value;
-  const recs = state.records.filter(r =>
-    (!fm || r.machine === fm) &&
-    (!fc || r.category === fc) &&
-    (!ff || r.flavor === ff) &&
-    r.workers > 0 && r.output > 0
-  );
+  const fm=document.getElementById('scatter-machine').value;
+  const fc=document.getElementById('scatter-category').value;
+  const ff=document.getElementById('scatter-flavor').value;
+  const recs=state.records.filter(r=>(!fm||r.machine===fm)&&(!fc||r.category===fc)&&(!ff||r.flavor===ff)&&r.workers>0&&r.output>0);
 
-  const insightEl = document.getElementById('scatter-insight');
-
+  const insightEl=document.getElementById('scatter-insight');
   if(!recs.length){
-    scatterChart = destroyChart(scatterChart);
-    document.getElementById('scatter-legend').innerHTML = '';
-    insightEl.style.display = 'none';
+    scatterChart=destroyChart(scatterChart);
+    document.getElementById('scatter-legend').innerHTML='';
+    insightEl.classList.remove('show');
     return;
   }
 
-  // 依機台分組，每台一個顏色
-  const machines = [...new Set(recs.map(r => r.machine))].sort();
-  const datasets = machines.map((m, i) => {
-    const mRecs = recs.filter(r => r.machine === m);
-    return {
-      label: m,
-      data: mRecs.map(r => ({ x: r.workers, y: calcPP(r), date: r.date, cat: r.category, flavor: r.flavor })),
-      backgroundColor: SCATTER_COLORS[i % SCATTER_COLORS.length] + 'CC',
-      pointRadius: 6,
-      pointHoverRadius: 9,
-    };
+  const machines=[...new Set(recs.map(r=>r.machine))].sort();
+  const datasets=machines.map((m,i)=>({
+    label:m,
+    data:recs.filter(r=>r.machine===m).map(r=>({x:r.workers,y:calcPP(r),date:r.date,cat:r.category,flavor:r.flavor})),
+    backgroundColor:SCATTER_COLORS[i%SCATTER_COLORS.length]+'CC',
+    pointRadius:6,pointHoverRadius:9,
+  }));
+
+  const workerGroups={};
+  recs.forEach(r=>{const w=r.workers;if(!workerGroups[w])workerGroups[w]=[];workerGroups[w].push(calcPP(r));});
+  let bestWorkers=null,bestAvg=0;
+  Object.entries(workerGroups).forEach(([w,vals])=>{
+    if(vals.length>=1){const avg=Math.round(vals.reduce((a,b)=>a+b,0)/vals.length);if(avg>bestAvg){bestAvg=avg;bestWorkers=parseInt(w);}}
   });
 
-  // 計算最佳人數（依整體）
-  const workerGroups = {};
-  recs.forEach(r => {
-    const w = r.workers;
-    if(!workerGroups[w]) workerGroups[w] = [];
-    workerGroups[w].push(calcPP(r));
-  });
-  let bestWorkers = null, bestAvg = 0;
-  Object.entries(workerGroups).forEach(([w, vals]) => {
-    if(vals.length >= 1) {
-      const avg = Math.round(vals.reduce((a,b)=>a+b,0)/vals.length);
-      if(avg > bestAvg){ bestAvg = avg; bestWorkers = parseInt(w); }
-    }
-  });
+  if(bestWorkers!==null){
+    const yMax=Math.max(...recs.map(r=>calcPP(r)))*1.1;
+    datasets.push({label:`最佳人數 (${bestWorkers}人)`,data:[{x:bestWorkers,y:0},{x:bestWorkers,y:Math.round(yMax)}],type:'line',borderColor:'#0D6B55',borderWidth:1.5,borderDash:[5,4],pointRadius:0,fill:false,order:-1});
+    insightEl.classList.add('show');
+    const overRecs=recs.filter(r=>r.workers>bestWorkers).length;
+    insightEl.innerHTML=`<strong>最佳人數：${bestWorkers} 人</strong>，此配置平均人均最高（${bestAvg} 件/人）。`+(overRecs>0?` 共 ${overRecs} 筆超過最佳點（${Math.round(overRecs/recs.length*100)}%）。`:'目前所有記錄在最佳人數內。');
+  } else {insightEl.classList.remove('show');}
 
-  // 最佳人數標示線 dataset
-  if(bestWorkers !== null){
-    const yMax = Math.max(...recs.map(r => calcPP(r))) * 1.1;
-    datasets.push({
-      label: `最佳人數 (${bestWorkers}人)`,
-      data: [{x: bestWorkers, y: 0}, {x: bestWorkers, y: Math.round(yMax)}],
-      type: 'line',
-      borderColor: '#1D9E75',
-      borderWidth: 2,
-      borderDash: [5, 4],
-      pointRadius: 0,
-      fill: false,
-      order: -1,
-    });
-
-    insightEl.style.display = 'block';
-    const totalRecs = recs.length;
-    const overRecs = recs.filter(r => r.workers > bestWorkers).length;
-    insightEl.innerHTML = `<strong>最佳人數：${bestWorkers} 人</strong>，此配置平均人均產值最高（${bestAvg} 件/人）。` +
-      (overRecs > 0 ? `共有 ${overRecs} 筆記錄人數超過最佳點（佔 ${Math.round(overRecs/totalRecs*100)}%）。` : '目前所有記錄都在最佳人數內。');
-  } else {
-    insightEl.style.display = 'none';
-  }
-
-  scatterChart = destroyChart(scatterChart);
-  scatterChart = new Chart(document.getElementById('scatterChart'), {
-    type: 'scatter',
-    data: { datasets },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: ctx => {
-              const d = ctx.raw;
-              if(d.date) return [`${ctx.dataset.label}`, `人數：${d.x} 人`, `人均：${d.y} 件/人`, `日期：${d.date}`, `${d.cat} / ${d.flavor}`];
-              return ctx.dataset.label;
-            }
-          }
-        }
-      },
-      scales: {
-        x: {
-          title: { display: true, text: '人員數量（人）', font: { size: 11 }, color: '#9b9b95' },
-          ticks: { font: { size: 11 }, stepSize: 1, precision: 0 },
-          grid: { color: 'rgba(128,128,128,0.1)' },
-          min: 0,
-        },
-        y: {
-          title: { display: true, text: '人均產值（件/人）', font: { size: 11 }, color: '#9b9b95' },
-          ticks: { font: { size: 11 } },
-          grid: { color: 'rgba(128,128,128,0.1)' },
-          beginAtZero: true,
-        }
-      }
-    }
+  scatterChart=destroyChart(scatterChart);
+  scatterChart=new Chart(document.getElementById('scatterChart'),{
+    type:'scatter',data:{datasets},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{const d=ctx.raw;if(d.date)return[`${ctx.dataset.label}`,`人數：${d.x} 人`,`人均：${d.y} 件/人`,`日期：${d.date}`,`${d.cat} / ${d.flavor}`];return ctx.dataset.label;}}}},
+      scales:{x:{title:{display:true,text:'人員數量（人）',font:{size:11},color:'#8A9992'},ticks:{font:{size:11},color:'#8A9992',stepSize:1,precision:0},grid:{color:'rgba(0,0,0,0.04)'},min:0},y:{title:{display:true,text:'人均產值（件/人）',font:{size:11},color:'#8A9992'},ticks:{font:{size:11},color:'#8A9992'},grid:{color:'rgba(0,0,0,0.04)'},beginAtZero:true}}}
   });
 
-  // Legend
-  const legendMachines = machines.slice(0, 5);
-  document.getElementById('scatter-legend').innerHTML =
-    legendMachines.map((m, i) => `<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:50%;background:${SCATTER_COLORS[i%SCATTER_COLORS.length]}"></span>${m}</span>`).join('') +
-    (bestWorkers !== null ? `<span style="display:flex;align-items:center;gap:4px;margin-left:8px"><span style="width:18px;height:2px;background:#1D9E75;border-top:2px dashed #1D9E75"></span>最佳人數</span>` : '');
+  document.getElementById('scatter-legend').innerHTML=
+    machines.slice(0,5).map((m,i)=>`<div class="scatter-legend-item"><span style="width:10px;height:10px;border-radius:50%;background:${SCATTER_COLORS[i%SCATTER_COLORS.length]};display:inline-block"></span>${m}</div>`).join('')+
+    (bestWorkers!==null?`<div class="scatter-legend-item"><span style="width:18px;height:0;border-top:2px dashed #0D6B55;display:inline-block"></span>最佳人數</div>`:'');
 }
 
-// LOGS PAGE
+// ── LOGS ──
 let logCurrentPage=0;
 const LOG_PAGE_SIZE=15;
 
@@ -906,17 +1553,10 @@ function getLogFiltered(){
   const fm=document.getElementById('log-fil-machine').value;
   const df=document.getElementById('log-date-from').value;
   const dt=document.getElementById('log-date-to').value;
-  return state.records.filter(r=>
-    (!fc||r.category===fc)&&(!fl||r.leader===fl)&&(!fm||r.machine===fm)&&
-    (!df||r.date>=df)&&(!dt||r.date<=dt)
-  );
+  return state.records.filter(r=>(!fc||r.category===fc)&&(!fl||r.leader===fl)&&(!fm||r.machine===fm)&&(!df||r.date>=df)&&(!dt||r.date<=dt));
 }
 
-function renderLogs(){
-  logCurrentPage=0;
-  renderLogPage();
-}
-
+function renderLogs(){logCurrentPage=0;renderLogPage();}
 function logPage(dir){
   const recs=getLogFiltered();
   const totalPages=Math.ceil(recs.length/LOG_PAGE_SIZE);
@@ -938,21 +1578,21 @@ function renderLogPage(){
 
   const tbody=document.getElementById('log-tbody');
   if(!page.length){
-    tbody.innerHTML='<tr><td colspan="9" style="color:var(--text3);text-align:center;padding:20px">無符合條件的記錄</td></tr>';
+    tbody.innerHTML=`<tr><td colspan="9"><div class="empty"><i class="ti ti-search-off"></i>無符合條件的記錄</div></td></tr>`;
     return;
   }
   tbody.innerHTML=page.map(r=>{
     const bc=CAT_BADGE[r.category]||'badge-blue';
     return`<tr>
-      <td style="color:var(--text2);white-space:nowrap">${r.date}</td>
+      <td class="muted" style="white-space:nowrap">${r.date}</td>
       <td>${r.machine}</td>
-      <td>${r.leader}</td>
+      <td class="muted">${r.leader}</td>
       <td><span class="badge ${bc}">${r.category}</span></td>
-      <td style="color:var(--text2)">${r.flavor}</td>
-      <td>${r.workers}人</td>
-      <td>${r.output}</td>
-      <td style="font-weight:500">${calcPP(r)}</td>
-      <td><button class="btn btn-danger btn-sm" data-id="${r.id}"><i class="ti ti-trash"></i></button></td>
+      <td class="muted">${r.flavor}</td>
+      <td class="muted">${r.workers}人</td>
+      <td class="muted">${r.output}</td>
+      <td class="num">${calcPP(r)}</td>
+      <td><button class="btn btn-ghost btn-sm" data-id="${r.id}" aria-label="刪除"><i class="ti ti-trash" style="color:var(--red)"></i></button></td>
     </tr>`;
   }).join('');
   tbody.querySelectorAll('button[data-id]').forEach(btn=>btn.addEventListener('click',()=>deleteRecord(parseInt(btn.dataset.id))));
@@ -965,88 +1605,40 @@ async function deleteRecord(id){
     const r=await sbFetch('records?id=eq.'+id,{method:'DELETE'});
     if(!r.ok) throw new Error();
     state.records=state.records.filter(rec=>rec.id!==id);
-    setSynced();
-    toast('✓ 已刪除');
-    renderRecentTable();
-    renderLogPage();
+    setSynced();toast('✓ 已刪除');
+    renderRecentTable();renderLogPage();
   }catch(e){setSyncError();toast('⚠ 刪除失敗');}
 }
 
-// EXPORT EXCEL
+// ── EXPORT ──
 function exportExcel(){
   const fc=document.getElementById('trend-fil-category').value;
   const fl=document.getElementById('trend-fil-leader').value;
   const fm=document.getElementById('trend-fil-machine').value;
   const dates=getDateRange(trendRange);
   const recs=state.records.filter(r=>(!fc||r.category===fc)&&(!fl||r.leader===fl)&&(!fm||r.machine===fm)&&dates.includes(r.date));
-
   if(!recs.length){toast('⚠ 目前篩選條件無資料可匯出');return;}
 
-  // Sheet 1: 明細
-  const detail=recs.map(r=>({
-    '日期':r.date,
-    '機台':r.machine,
-    '組長':r.leader,
-    '類別':r.category,
-    '口味':r.flavor,
-    '人員數':r.workers,
-    '總產量':r.output,
-    '人均產值':calcPP(r),
-    '工時(h)':Math.round(calcHours(r.start,r.end)*10)/10,
-    '每人時產':calcPPH(r),
-    '開始時間':r.start,
-    '結束時間':r.end
-  }));
-
-  // Sheet 2: 每日統計
-  const byDate={};dates.forEach(d=>byDate[d]=[]);
-  recs.forEach(r=>{if(byDate[r.date])byDate[r.date].push(r);});
-  const daily=dates.filter(d=>byDate[d].length).map(d=>{
-    const a=byDate[d];
-    return{
-      '日期':d,
-      '記錄筆數':a.length,
-      '平均人均產值':Math.round(a.reduce((s,r)=>s+calcPP(r),0)/a.length),
-      '平均每人時產':Math.round(a.reduce((s,r)=>s+calcPPH(r),0)/a.length*10)/10,
-      '總產量':a.reduce((s,r)=>s+r.output,0)
-    };
-  });
-
-  // Sheet 3: 各機台統計
-  const byM={};
-  recs.forEach(r=>{if(!byM[r.machine])byM[r.machine]=[];byM[r.machine].push(r);});
-  const machSummary=Object.entries(byM).map(([m,a])=>({
-    '機台':m,
-    '記錄筆數':a.length,
-    '平均人均產值':Math.round(a.reduce((s,r)=>s+calcPP(r),0)/a.length),
-    '平均每人時產':Math.round(a.reduce((s,r)=>s+calcPPH(r),0)/a.length*10)/10,
-    '總產量':a.reduce((s,r)=>s+r.output,0)
-  })).sort((a,b)=>b['平均人均產值']-a['平均人均產值']);
-
-  // Sheet 4: 各組長統計
-  const byL={};
-  recs.forEach(r=>{if(!byL[r.leader])byL[r.leader]=[];byL[r.leader].push(r);});
-  const leaderSummary=Object.entries(byL).map(([l,a])=>({
-    '組長':l,
-    '記錄筆數':a.length,
-    '平均人均產值':Math.round(a.reduce((s,r)=>s+calcPP(r),0)/a.length),
-    '平均每人時產':Math.round(a.reduce((s,r)=>s+calcPPH(r),0)/a.length*10)/10,
-    '總產量':a.reduce((s,r)=>s+r.output,0)
-  })).sort((a,b)=>b['平均人均產值']-a['平均人均產值']);
+  const detail=recs.map(r=>({'日期':r.date,'機台':r.machine,'組長':r.leader,'類別':r.category,'口味':r.flavor,'人員數':r.workers,'總產量':r.output,'人均產值':calcPP(r),'工時(h)':Math.round(calcHours(r.start,r.end)*10)/10,'每人時產':calcPPH(r),'開始時間':r.start,'結束時間':r.end}));
+  const byDate={};dates.forEach(d=>byDate[d]=[]);recs.forEach(r=>{if(byDate[r.date])byDate[r.date].push(r);});
+  const daily=dates.filter(d=>byDate[d].length).map(d=>{const a=byDate[d];return{'日期':d,'記錄筆數':a.length,'平均人均產值':Math.round(a.reduce((s,r)=>s+calcPP(r),0)/a.length),'平均每人時產':Math.round(a.reduce((s,r)=>s+calcPPH(r),0)/a.length*10)/10,'總產量':a.reduce((s,r)=>s+r.output,0)};});
+  const byM={};recs.forEach(r=>{if(!byM[r.machine])byM[r.machine]=[];byM[r.machine].push(r);});
+  const machSummary=Object.entries(byM).map(([m,a])=>({'機台':m,'記錄筆數':a.length,'平均人均產值':Math.round(a.reduce((s,r)=>s+calcPP(r),0)/a.length),'平均每人時產':Math.round(a.reduce((s,r)=>s+calcPPH(r),0)/a.length*10)/10,'總產量':a.reduce((s,r)=>s+r.output,0)})).sort((a,b)=>b['平均人均產值']-a['平均人均產值']);
+  const byL={};recs.forEach(r=>{if(!byL[r.leader])byL[r.leader]=[];byL[r.leader].push(r);});
+  const leaderSummary=Object.entries(byL).map(([l,a])=>({'組長':l,'記錄筆數':a.length,'平均人均產值':Math.round(a.reduce((s,r)=>s+calcPP(r),0)/a.length),'平均每人時產':Math.round(a.reduce((s,r)=>s+calcPPH(r),0)/a.length*10)/10,'總產量':a.reduce((s,r)=>s+r.output,0)})).sort((a,b)=>b['平均人均產值']-a['平均人均產值']);
 
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(detail),'記錄明細');
   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(daily),'每日統計');
   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(machSummary),'機台統計');
   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(leaderSummary),'組長統計');
-
   const today=new Date().toISOString().slice(0,10);
   const label=[fc,fl,fm].filter(Boolean).join('_')||'全部';
   XLSX.writeFile(wb,`包裝部產值_${label}_${today}.xlsx`);
-  toast('✓ Excel 已下載！共 '+recs.length+' 筆資料');
+  toast('✓ Excel 已下載！共 '+recs.length+' 筆');
 }
 
-// ADMIN
+// ── ADMIN ──
 function renderAdminLists(){
   renderSimpleList('machines','machine');
   renderSimpleList('leaders','leader');
@@ -1055,7 +1647,8 @@ function renderAdminLists(){
 
 function renderSimpleList(key,type){
   const el=document.getElementById('admin-'+key);
-  el.innerHTML=state[key].map((v,i)=>`<div class="admin-item"><span class="admin-item-name">${v}</span><button class="btn btn-danger btn-sm" data-type="${type}" data-idx="${i}"><i class="ti ti-trash"></i></button></div>`).join('')||`<p style="color:var(--text3);font-size:13px">尚無項目</p>`;
+  if(!state[key].length){el.innerHTML='<p style="font-size:13px;color:var(--ash-light);padding:8px 0">尚無項目</p>';return;}
+  el.innerHTML=state[key].map((v,i)=>`<div class="admin-item"><span class="admin-item-name">${v}</span><button class="btn btn-ghost btn-sm" data-type="${type}" data-idx="${i}" aria-label="刪除 ${v}"><i class="ti ti-trash" style="color:var(--red)"></i></button></div>`).join('');
   el.querySelectorAll('button[data-type]').forEach(btn=>btn.addEventListener('click',()=>removeItem(btn.dataset.type,parseInt(btn.dataset.idx))));
 }
 
@@ -1063,14 +1656,19 @@ function renderFlavorAdmin(){
   const wrap=document.getElementById('admin-flavors');
   wrap.innerHTML=CATEGORIES.map(cat=>{
     const flavors=state.flavors[cat]||[];
-    const flavorItems=flavors.map((f,i)=>`<div class="admin-sub"><span class="admin-sub-name">${f}</span><button class="btn btn-danger btn-sm" data-cat="${cat}" data-fidx="${i}"><i class="ti ti-trash"></i></button></div>`).join('');
+    const col=CAT_COLORS[cat]||'#8A9992';
+    const flavorItems=flavors.map((f,i)=>`<div class="admin-sub"><span class="admin-sub-name">${f}</span><button class="btn btn-ghost btn-sm" data-cat="${cat}" data-fidx="${i}" aria-label="刪除 ${f}"><i class="ti ti-trash" style="color:var(--red)"></i></button></div>`).join('');
     return`<div class="cat-section">
       <div class="cat-header" onclick="toggleCat(this)">
-        <span class="cat-header-name"><span class="badge ${CAT_BADGE[cat]}" style="margin-right:6px">${cat}</span>${flavors.length} 個口味</span>
-        <i class="ti ti-chevron-down" style="color:var(--text3)"></i>
+        <div class="cat-header-left">
+          <div class="cat-color-bar" style="background:${col}"></div>
+          <span class="cat-header-name">${cat}</span>
+          <span class="cat-header-count">${flavors.length} 個口味</span>
+        </div>
+        <i class="ti ti-chevron-down" style="color:var(--ash-light);font-size:16px"></i>
       </div>
       <div class="cat-body" id="cat-body-${cat}">
-        <div class="admin-list" id="flavor-list-${cat}" style="margin-bottom:8px">${flavorItems||'<p style="color:var(--text3);font-size:13px">尚無口味</p>'}</div>
+        <div class="admin-list" id="flavor-list-${cat}" style="margin-bottom:8px">${flavorItems||'<p style="font-size:13px;color:var(--ash-light)">尚無口味</p>'}</div>
         <div class="admin-add-row">
           <input type="text" class="form-control" id="new-flavor-${cat}" placeholder="新增口味名稱">
           <button class="btn btn-primary" data-addcat="${cat}"><i class="ti ti-plus"></i></button>
@@ -1079,18 +1677,11 @@ function renderFlavorAdmin(){
     </div>`;
   }).join('');
 
-  // Bind delete flavor
-  wrap.querySelectorAll('button[data-cat]').forEach(btn=>{
-    btn.addEventListener('click',()=>removeFlavor(btn.dataset.cat,parseInt(btn.dataset.fidx)));
-  });
-  // Bind add flavor
-  wrap.querySelectorAll('button[data-addcat]').forEach(btn=>{
-    btn.addEventListener('click',()=>addFlavor(btn.dataset.addcat));
-  });
-  // Enter key
+  wrap.querySelectorAll('button[data-cat]').forEach(btn=>{btn.addEventListener('click',()=>removeFlavor(btn.dataset.cat,parseInt(btn.dataset.fidx)));});
+  wrap.querySelectorAll('button[data-addcat]').forEach(btn=>{btn.addEventListener('click',()=>addFlavor(btn.dataset.addcat));});
   CATEGORIES.forEach(cat=>{
     const inp=document.getElementById('new-flavor-'+cat);
-    if(inp) inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addFlavor(cat);}});
+    if(inp)inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addFlavor(cat);}});
   });
 }
 
@@ -1099,7 +1690,7 @@ function toggleCat(header){
   body.classList.toggle('open');
   const icon=header.querySelector('i');
   icon.className=body.classList.contains('open')?'ti ti-chevron-up':'ti ti-chevron-down';
-  icon.style.color='var(--text3)';
+  icon.style.color='var(--ash-light)';
 }
 
 async function addFlavor(cat){
@@ -1112,7 +1703,6 @@ async function addFlavor(cat){
   await saveSettings('flavors');
   inp.value='';
   renderFlavorAdmin();
-  // Re-open the section
   const body=document.getElementById('cat-body-'+cat);
   if(body){body.classList.add('open');const h=body.previousElementSibling;if(h){const ic=h.querySelector('i');if(ic)ic.className='ti ti-chevron-up';}}
   toast('✓ 已新增：'+val);
@@ -1160,7 +1750,7 @@ async function clearRecords(){
   catch(e){toast('⚠ 清除失敗：'+e.message);}
 }
 
-// NAV
+// ── NAV ──
 function goPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
@@ -1171,6 +1761,11 @@ function goPage(id){
   if(id==='admin')renderAdminLists();
   if(id==='logs'){populateLogSelects();renderLogs();}
 }
+
+// Keyboard nav
+document.querySelectorAll('.nav-item').forEach(item=>{
+  item.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();item.click();}});
+});
 
 function populateLogSelects(){
   ['log-fil-leader','log-fil-machine'].forEach((id,ki)=>{
@@ -1183,13 +1778,12 @@ function populateLogSelects(){
   });
 }
 
-// INIT — ensure flavors key exists in Supabase
+// ── INIT ──
 async function ensureFlavorsKey(){
   const r=await sbFetch('settings?key=eq.flavors');
   if(!r.ok)return;
   const rows=await r.json();
   if(!rows.length){
-    // Insert default empty flavors
     await sbFetch('settings',{method:'POST',body:JSON.stringify({key:'flavors',value:{獨享包:[],鐵盒:[],單片:[],漢餅:[],圓夢:[],月餅:[]}})});
   }
 }
@@ -1216,8 +1810,7 @@ async function init(){
 });
 
 init().then(()=>{
-  // pre-populate scatter machine select after data loaded
-  setTimeout(()=>{ if(document.getElementById('scatter-machine')) populateScatterMachines(); }, 800);
+  setTimeout(()=>{if(document.getElementById('scatter-machine'))populateScatterMachines();},800);
 });
 </script>
 </body>
