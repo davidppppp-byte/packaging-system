@@ -50,6 +50,7 @@
   --r6:6px;
   --nav-h:56px;
   --ease-spring:cubic-bezier(0.16,1,0.3,1);
+  --nav-items:6;
 }
 
 /* ── BASE ─────────────────────────────── */
@@ -631,6 +632,107 @@ td.muted{color:var(--ash)}
 @media(prefers-reduced-motion:reduce){
   *{animation-duration:0.01ms!important;transition-duration:0.01ms!important}
 }
+
+/* ── QUICK FILL ─────────────────────────────── */
+.quick-fill-bar{
+  display:flex;align-items:center;gap:10px;
+  background:var(--mist);
+  border:1px solid var(--wire);
+  border-radius:var(--r4);
+  padding:10px 14px;
+  margin-bottom:14px;
+  animation:fadeIn 0.25s var(--ease-spring);
+}
+.quick-fill-label{
+  flex:1;font-size:12px;color:var(--ash);line-height:1.4;
+}
+.quick-fill-label strong{
+  display:block;font-size:13px;font-weight:600;color:var(--forest);margin-bottom:1px;
+}
+.btn-quick-fill{
+  flex-shrink:0;
+  background:var(--forest);color:#fff;
+  border:none;border-radius:var(--r4);
+  padding:7px 14px;font-size:12px;font-weight:600;
+  cursor:pointer;display:flex;align-items:center;gap:5px;
+  transition:background 0.15s;white-space:nowrap;
+}
+.btn-quick-fill:hover{background:var(--forest-deep)}
+.btn-quick-fill:active{transform:scale(0.96)}
+.quick-fill-bar.hidden{display:none}
+
+/* ── REPORT PAGE ─────────────────────────────── */
+.report-mode-pills{
+  display:flex;gap:6px;
+  margin-bottom:16px;
+}
+.report-mode-pills .pill{
+  font-size:12px;padding:6px 14px;
+}
+.report-block{
+  background:var(--mist);
+  border:1px solid var(--wire);
+  border-radius:var(--r6);
+  padding:16px;
+  margin-bottom:12px;
+  font-size:12px;
+  line-height:1.8;
+  color:var(--ink);
+  white-space:pre-wrap;
+  word-break:break-all;
+  font-family:ui-monospace,'Cascadia Code','Menlo',monospace;
+  min-height:120px;
+}
+.report-section-card{
+  background:var(--surface);
+  border:1px solid var(--wire);
+  border-radius:var(--r6);
+  margin-bottom:10px;
+  overflow:hidden;
+}
+.report-section-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;
+  background:var(--mist-deep);
+  border-bottom:1px solid var(--wire);
+  font-size:12px;font-weight:600;letter-spacing:0.03em;
+  color:var(--forest);
+}
+.report-section-body{
+  padding:12px 16px;
+}
+.report-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:7px 0;
+  border-bottom:1px solid var(--wire-light);
+  font-size:13px;
+}
+.report-row:last-child{border-bottom:none}
+.report-row-label{color:var(--ink);font-weight:500}
+.report-row-val{color:var(--ash);font-variant-numeric:tabular-nums;text-align:right}
+.report-row-val strong{color:var(--ink);font-size:15px}
+.copy-report-btn{
+  width:100%;
+  background:var(--forest);color:#fff;
+  border:none;border-radius:var(--r4);
+  padding:12px;font-size:14px;font-weight:600;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
+  margin-bottom:12px;
+  transition:background 0.15s,transform 0.1s;
+}
+.copy-report-btn:hover{background:var(--forest-deep)}
+.copy-report-btn:active{transform:scale(0.97)}
+.report-empty{
+  text-align:center;padding:48px 24px;
+  color:var(--ash-light);font-size:13px;
+}
+.report-empty i{display:block;font-size:32px;margin-bottom:10px;color:var(--wire)}
+.report-meta{
+  font-size:11px;color:var(--ash-light);
+  margin-bottom:14px;
+  display:flex;align-items:center;gap:6px;
+}
+.report-meta i{font-size:13px}
 </style>
 </head>
 <body>
@@ -669,6 +771,10 @@ td.muted{color:var(--ash)}
     <i class="ti ti-database" aria-hidden="true"></i>
     <span>管理</span>
   </div>
+  <div class="nav-item" onclick="goPage('report')" role="button" aria-label="週報" tabindex="0">
+    <i class="ti ti-report-analytics" aria-hidden="true"></i>
+    <span>週報</span>
+  </div>
 </nav>
 
 <!-- ===== 記錄頁 ===== -->
@@ -681,6 +787,17 @@ td.muted{color:var(--ash)}
   <div class="card">
     <div class="card-header">
       <div class="card-title"><i class="ti ti-clipboard-plus"></i>作業資訊</div>
+    </div>
+
+    <!-- Quick Fill Bar -->
+    <div class="quick-fill-bar hidden" id="quick-fill-bar">
+      <div class="quick-fill-label">
+        <strong><i class="ti ti-copy" style="margin-right:3px"></i>沿用上一筆</strong>
+        <span id="quick-fill-hint">點擊套用機台、組長、類別、口味與人數</span>
+      </div>
+      <button class="btn-quick-fill" onclick="applyLastRecord()" type="button">
+        <i class="ti ti-arrow-bar-to-down"></i> 套用
+      </button>
     </div>
 
     <div class="form-row">
@@ -1049,6 +1166,32 @@ td.muted{color:var(--ash)}
   </div>
 </main>
 
+<!-- ===== 週報 ===== -->
+<main id="page-report" class="page" role="main">
+  <div class="page-header">
+    <h1>週報 / 月報</h1>
+    <p>自動彙整，一鍵複製給執行長</p>
+  </div>
+
+  <div class="report-mode-pills" role="group" aria-label="報告週期">
+    <div class="pill active" onclick="setReportMode(this,'lastweek')" role="button" tabindex="0">上週</div>
+    <div class="pill" onclick="setReportMode(this,'thisweek')" role="button" tabindex="0">本週</div>
+    <div class="pill" onclick="setReportMode(this,'lastmonth')" role="button" tabindex="0">上月</div>
+    <div class="pill" onclick="setReportMode(this,'thismonth')" role="button" tabindex="0">本月</div>
+  </div>
+
+  <div class="report-meta" id="report-date-range">
+    <i class="ti ti-calendar"></i>
+    <span id="report-range-label">—</span>
+  </div>
+
+  <button class="copy-report-btn" onclick="copyReport()" id="copy-report-btn" aria-label="複製報告">
+    <i class="ti ti-clipboard-copy"></i> 複製報告給執行長
+  </button>
+
+  <div id="report-content"></div>
+</main>
+
 <div class="toast" id="toast" role="alert" aria-live="assertive"></div>
 
 <script>
@@ -1218,6 +1361,7 @@ async function submitRecord(){
   try{
     const rec=await insertRecord({machine,leader,workers,output,category,flavor,start,end,date:fmtDate(start),reason,reasonNote});
     state.records.unshift(rec);
+    saveLastRecord(rec);
     renderRecentTable();
     document.getElementById('f-workers').value='';
     document.getElementById('f-output').value='';
@@ -1750,16 +1894,242 @@ async function clearRecords(){
   catch(e){toast('⚠ 清除失敗：'+e.message);}
 }
 
+// ── QUICK FILL ──
+function saveLastRecord(rec){
+  try{
+    const data={machine:rec.machine,leader:rec.leader,category:rec.category,flavor:rec.flavor,workers:rec.workers};
+    localStorage.setItem('meng_en_last_rec',JSON.stringify(data));
+    refreshQuickFillBar();
+  }catch(e){}
+}
+
+function getLastRecord(){
+  try{const d=localStorage.getItem('meng_en_last_rec');return d?JSON.parse(d):null;}catch(e){return null;}
+}
+
+function refreshQuickFillBar(){
+  const last=getLastRecord();
+  const bar=document.getElementById('quick-fill-bar');
+  const hint=document.getElementById('quick-fill-hint');
+  if(!bar)return;
+  if(last){
+    hint.textContent=`${last.machine}・${last.leader}・${last.category}・${last.flavor}・${last.workers}人`;
+    bar.classList.remove('hidden');
+  } else {
+    bar.classList.add('hidden');
+  }
+}
+
+function applyLastRecord(){
+  const last=getLastRecord();
+  if(!last){toast('⚠ 尚無上一筆資料');return;}
+  const machSel=document.getElementById('f-machine');
+  const leadSel=document.getElementById('f-leader');
+  const catSel=document.getElementById('f-category');
+  if(last.machine&&[...machSel.options].some(o=>o.value===last.machine)) machSel.value=last.machine;
+  if(last.leader&&[...leadSel.options].some(o=>o.value===last.leader)) leadSel.value=last.leader;
+  if(last.category) catSel.value=last.category;
+  onCategoryChange();
+  setTimeout(()=>{
+    const flSel=document.getElementById('f-flavor');
+    if(last.flavor&&[...flSel.options].some(o=>o.value===last.flavor)) flSel.value=last.flavor;
+  },50);
+  if(last.workers) document.getElementById('f-workers').value=last.workers;
+  document.getElementById('f-output').value='';
+  document.getElementById('f-output').focus();
+  initDefaultTimes();
+  toast('✓ 已套用上一筆設定，請更新產量與時間');
+}
+
+// ── REPORT ──
+let reportMode='lastweek';
+
+function setReportMode(el,mode){
+  document.querySelectorAll('.report-mode-pills .pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  reportMode=mode;
+  generateReport();
+}
+
+function getReportDateRange(mode){
+  const now=new Date();
+  const pad=n=>String(n).padStart(2,'0');
+  const fmt=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  let start,end,label;
+  if(mode==='lastweek'){
+    const day=now.getDay();
+    const mon=new Date(now);mon.setDate(now.getDate()-day-(day===0?6:day-1)-7);mon.setHours(0,0,0,0);
+    const sun=new Date(mon);sun.setDate(mon.getDate()+6);
+    start=fmt(mon);end=fmt(sun);
+    label=`上週 ${start} ～ ${end}`;
+  } else if(mode==='thisweek'){
+    const day=now.getDay();
+    const mon=new Date(now);mon.setDate(now.getDate()-(day===0?6:day-1));mon.setHours(0,0,0,0);
+    start=fmt(mon);end=fmt(now);
+    label=`本週 ${start} ～ ${end}`;
+  } else if(mode==='lastmonth'){
+    const firstThisMonth=new Date(now.getFullYear(),now.getMonth(),1);
+    const lastMonth=new Date(firstThisMonth);lastMonth.setDate(0);
+    const firstLastMonth=new Date(lastMonth.getFullYear(),lastMonth.getMonth(),1);
+    start=fmt(firstLastMonth);end=fmt(lastMonth);
+    label=`上月 ${start} ～ ${end}`;
+  } else {
+    start=fmt(new Date(now.getFullYear(),now.getMonth(),1));end=fmt(now);
+    label=`本月 ${start} ～ ${end}`;
+  }
+  return{start,end,label};
+}
+
+function generateReport(){
+  const{start,end,label}=getReportDateRange(reportMode);
+  document.getElementById('report-range-label').textContent=label;
+
+  const recs=state.records.filter(r=>r.date>=start&&r.date<=end);
+  const content=document.getElementById('report-content');
+
+  if(!recs.length){
+    content.innerHTML=`<div class="report-empty"><i class="ti ti-report-off"></i>此區間無資料<br><small>${start} ～ ${end}</small></div>`;
+    return;
+  }
+
+  const totalRecs=recs.length;
+  const totalOutput=recs.reduce((s,r)=>s+r.output,0);
+  const avgPP=Math.round(recs.reduce((s,r)=>s+calcPP(r),0)/recs.length);
+  const avgPPH=Math.round(recs.reduce((s,r)=>s+calcPPH(r),0)/recs.length*10)/10;
+  const abnCount=recs.filter(r=>r.reason).length;
+
+  // By category
+  const byCat={};
+  CATEGORIES.forEach(cat=>{
+    const cr=recs.filter(r=>r.category===cat);
+    if(!cr.length)return;
+    byCat[cat]={count:cr.length,avgPP:Math.round(cr.reduce((s,r)=>s+calcPP(r),0)/cr.length),avgPPH:Math.round(cr.reduce((s,r)=>s+calcPPH(r),0)/cr.length*10)/10,total:cr.reduce((s,r)=>s+r.output,0)};
+  });
+
+  // By machine
+  const byMach={};
+  recs.forEach(r=>{if(!byMach[r.machine])byMach[r.machine]=[];byMach[r.machine].push(r);});
+  const machArr=Object.entries(byMach).map(([m,a])=>({name:m,count:a.length,avgPP:Math.round(a.reduce((s,r)=>s+calcPP(r),0)/a.length),total:a.reduce((s,r)=>s+r.output,0)})).sort((a,b)=>b.avgPP-a.avgPP);
+
+  // By leader
+  const byLead={};
+  recs.forEach(r=>{if(!byLead[r.leader])byLead[r.leader]=[];byLead[r.leader].push(r);});
+  const leadArr=Object.entries(byLead).map(([l,a])=>({name:l,count:a.length,avgPP:Math.round(a.reduce((s,r)=>s+calcPP(r),0)/a.length)})).sort((a,b)=>b.avgPP-a.avgPP);
+
+  // Build HTML sections
+  let html='';
+
+  // Overview
+  html+=`<div class="report-section-card">
+    <div class="report-section-header"><i class="ti ti-chart-pie" style="margin-right:6px"></i>總覽</div>
+    <div class="report-section-body">
+      <div class="report-row"><span class="report-row-label">記錄筆數</span><span class="report-row-val"><strong>${totalRecs}</strong> 筆</span></div>
+      <div class="report-row"><span class="report-row-label">總產量</span><span class="report-row-val"><strong>${totalOutput.toLocaleString()}</strong> 件</span></div>
+      <div class="report-row"><span class="report-row-label">平均人均產值</span><span class="report-row-val"><strong>${avgPP}</strong> 件/人</span></div>
+      <div class="report-row"><span class="report-row-label">平均每人時產</span><span class="report-row-val"><strong>${avgPPH}</strong> 件/人時</span></div>
+      <div class="report-row"><span class="report-row-label">異常記錄</span><span class="report-row-val" style="color:${abnCount>0?'var(--red)':'var(--sage)'}">${abnCount} 筆</span></div>
+    </div>
+  </div>`;
+
+  // By category
+  if(Object.keys(byCat).length){
+    const catRows=Object.entries(byCat).map(([cat,d])=>`<div class="report-row"><span class="report-row-label"><span class="badge ${CAT_BADGE[cat]||'badge-blue'}" style="font-size:9px">${cat}</span></span><span class="report-row-val">${d.avgPP} 件/人&nbsp;<span style="color:var(--ash-light);font-size:11px">${d.count}筆</span></span></div>`).join('');
+    html+=`<div class="report-section-card">
+      <div class="report-section-header"><i class="ti ti-stack-2" style="margin-right:6px"></i>各類別人均</div>
+      <div class="report-section-body">${catRows}</div>
+    </div>`;
+  }
+
+  // By machine
+  if(machArr.length){
+    const machRows=machArr.map((m,i)=>`<div class="report-row"><span class="report-row-label"><span class="rank-num ${i<3?'top':''}" style="display:inline-flex;margin-right:6px;font-size:9px">${i+1}</span>${m.name}</span><span class="report-row-val">${m.avgPP} 件/人&nbsp;<span style="color:var(--ash-light);font-size:11px">${m.count}筆</span></span></div>`).join('');
+    html+=`<div class="report-section-card">
+      <div class="report-section-header"><i class="ti ti-cpu" style="margin-right:6px"></i>各機台排名（人均）</div>
+      <div class="report-section-body">${machRows}</div>
+    </div>`;
+  }
+
+  // By leader
+  if(leadArr.length){
+    const leadRows=leadArr.map(l=>`<div class="report-row"><span class="report-row-label">${l.name}</span><span class="report-row-val">${l.avgPP} 件/人&nbsp;<span style="color:var(--ash-light);font-size:11px">${l.count}筆</span></span></div>`).join('');
+    html+=`<div class="report-section-card">
+      <div class="report-section-header"><i class="ti ti-users" style="margin-right:6px"></i>各組長人均</div>
+      <div class="report-section-body">${leadRows}</div>
+    </div>`;
+  }
+
+  content.innerHTML=html;
+}
+
+function copyReport(){
+  const{start,end,label}=getReportDateRange(reportMode);
+  const recs=state.records.filter(r=>r.date>=start&&r.date<=end);
+  if(!recs.length){toast('⚠ 此區間無資料');return;}
+
+  const totalRecs=recs.length;
+  const totalOutput=recs.reduce((s,r)=>s+r.output,0);
+  const avgPP=Math.round(recs.reduce((s,r)=>s+calcPP(r),0)/recs.length);
+  const avgPPH=Math.round(recs.reduce((s,r)=>s+calcPPH(r),0)/recs.length*10)/10;
+  const abnCount=recs.filter(r=>r.reason).length;
+
+  const byCat={};
+  CATEGORIES.forEach(cat=>{
+    const cr=recs.filter(r=>r.category===cat);
+    if(!cr.length)return;
+    byCat[cat]={avgPP:Math.round(cr.reduce((s,r)=>s+calcPP(r),0)/cr.length),count:cr.length};
+  });
+
+  const byMach={};
+  recs.forEach(r=>{if(!byMach[r.machine])byMach[r.machine]=[];byMach[r.machine].push(r);});
+  const machArr=Object.entries(byMach).map(([m,a])=>({name:m,avgPP:Math.round(a.reduce((s,r)=>s+calcPP(r),0)/a.length)})).sort((a,b)=>b.avgPP-a.avgPP);
+
+  const lines=[
+    `📦 蒙恩聽障烘焙坊｜包裝部產值報告`,
+    `⏱ 期間：${label}`,
+    ``,
+    `【總覽】`,
+    `• 記錄筆數：${totalRecs} 筆`,
+    `• 總產量：${totalOutput.toLocaleString()} 件`,
+    `• 平均人均產值：${avgPP} 件/人`,
+    `• 平均每人時產：${avgPPH} 件/人時`,
+    abnCount>0?`• ⚠️ 異常記錄：${abnCount} 筆`:`• 異常記錄：0 筆（正常）`,
+    ``,
+    `【各類別人均】`,
+    ...Object.entries(byCat).map(([cat,d])=>`• ${cat}：${d.avgPP} 件/人（${d.count}筆）`),
+    ``,
+    `【各機台排名（人均）】`,
+    ...machArr.map((m,i)=>`${i+1}. ${m.name}：${m.avgPP} 件/人`),
+  ];
+
+  const text=lines.join('\n');
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(text).then(()=>{
+      toast('✓ 報告已複製，可直接貼到 LINE 或 Email！');
+      const btn=document.getElementById('copy-report-btn');
+      if(btn){btn.innerHTML='<i class="ti ti-check"></i> 已複製！';setTimeout(()=>{btn.innerHTML='<i class="ti ti-clipboard-copy"></i> 複製報告給執行長';},2000);}
+    }).catch(()=>fallbackCopy(text));
+  } else {fallbackCopy(text);}
+}
+
+function fallbackCopy(text){
+  const ta=document.createElement('textarea');
+  ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
+  document.body.appendChild(ta);ta.select();
+  try{document.execCommand('copy');toast('✓ 已複製！');}catch(e){toast('⚠ 複製失敗，請手動複製');}
+  document.body.removeChild(ta);
+}
+
 // ── NAV ──
 function goPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
-  document.querySelectorAll('.nav-item')[{record:0,dashboard:1,trend:2,admin:3,logs:4}[id]].classList.add('active');
+  document.querySelectorAll('.nav-item')[{record:0,dashboard:1,trend:2,admin:3,logs:4,report:5}[id]].classList.add('active');
   if(id==='dashboard')updateDash();
   if(id==='trend')updateTrend();
   if(id==='admin')renderAdminLists();
   if(id==='logs'){populateLogSelects();renderLogs();}
+  if(id==='report')generateReport();
 }
 
 // Keyboard nav
@@ -1796,6 +2166,7 @@ async function init(){
     populateSelects();
     initDefaultTimes();
     renderRecentTable();
+    refreshQuickFillBar();
     setSynced();
   }catch(e){
     setSyncError();
